@@ -3,20 +3,19 @@
 <?php
 require '../config/db.php'; // or the correct relative path
 
-
 // Pagination logic
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $records_per_page = 10;
 $start = ($page - 1) * $records_per_page;
 
 // Fetch total number of records
-$countQuery = "SELECT COUNT(*) FROM transactions";
+$countQuery = "SELECT COUNT(*) FROM user_transactions";
 $countStmt = $pdo->prepare($countQuery);
 $countStmt->execute();
 $totalTransactions = $countStmt->fetchColumn();
 
 // Fetch paginated records
-$query = "SELECT * FROM transactions ORDER BY created_at DESC LIMIT :start, :limit";
+$query = "SELECT * FROM user_transactions ORDER BY created_at DESC LIMIT :start, :limit";
 $stmt = $pdo->prepare($query);
 $stmt->bindValue(':start', $start, PDO::PARAM_INT);
 $stmt->bindValue(':limit', $records_per_page, PDO::PARAM_INT);
@@ -39,7 +38,6 @@ $transactions = $stmt->fetchAll();
     }
 
     .container {
-     
       background: #ffffff;
       padding: 30px;
       border-radius: 12px;
@@ -117,14 +115,15 @@ $transactions = $stmt->fetchAll();
         font-size: 13px;
         padding: 10px;
       }
-       .sidebar {
-    display: none;
-  }
+
+      .sidebar {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
-    <header>
+<header>
   <div class="logo-container">
        <img src="../image/Dollario-logo .svg" alt="" style="height: auto; width: 150px;">
   </div>
@@ -135,19 +134,16 @@ $transactions = $stmt->fetchAll();
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const menuBtn = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar'); // or whatever class/id your menu has
-
+    const sidebar = document.querySelector('.sidebar');
     menuBtn.addEventListener('click', function () {
-      sidebar.classList.toggle('active'); // Add or remove class to show/hide menu
+      sidebar.classList.toggle('active');
     });
   });
 </script>
-<style>  /* Hide header by default (for screens larger than 768px) */
+<style>
 header {
   display: none;
 }
-
-/* Show header only on phone view (768px and below) */
 @media (max-width: 768px) {
   header {
     display: flex;
@@ -155,7 +151,7 @@ header {
     justify-content: space-between;
     align-items: center;
     padding: 10px 20px;
-    background-color:#0e1a2b; /* You can change this */
+    background-color:#0e1a2b;
     color: white;
   }
 
@@ -170,7 +166,6 @@ header {
   }
 
   .menu-btn {
-    
     background: none;
     border: none;
     color: white;
@@ -178,10 +173,7 @@ header {
     cursor: pointer;
   }
 }
-
-
-
-  </style>
+</style>
 
 <div class="container">
   <div class="page-header">📄 Transaction History</div>
@@ -209,7 +201,8 @@ header {
             <td><?= htmlspecialchars($row['user_id']) ?></td>
             <td><?= htmlspecialchars($row['type']) ?></td>
             <td>₹<?= htmlspecialchars(number_format($row['amount'], 2)) ?></td>
-            <td><?= htmlspecialchars($row['status']) ?></td>
+         <td><?= htmlspecialchars($row['status'] ?? 'Pending') ?></td>
+
             <td><?= htmlspecialchars($row['created_at']) ?></td>
           </tr>
         <?php endforeach; ?>
@@ -231,4 +224,3 @@ header {
 
 </body>
 </html>
-

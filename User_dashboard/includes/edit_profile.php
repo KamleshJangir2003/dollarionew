@@ -3,7 +3,7 @@ session_start();  // session start karna zaroori hai
 
 // Database connection (PDO)
 $host = 'localhost';
-$dbname = 'dollario_admin';
+$dbname = 'u973762102_admin';
 $username = 'root';
 $password = '';
 

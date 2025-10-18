@@ -1,9 +1,9 @@
 <?php include '../templates/sidebar.php'; include '../templates/header.php';  ?>
 <?php
-$host = '46.202.161.91';
+$host = 'localhost';
 $dbname = 'u973762102_admin';
-$username = 'u973762102_dollario';
-$password = '876543Kamlesh';
+$username = 'root';
+$password = '';
 
 $conn = new mysqli($host, $username, $password, $dbname);
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);

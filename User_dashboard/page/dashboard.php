@@ -1,39 +1,45 @@
-<?php include('../sidebar.php'); ?>
-<?php include('../auth_check.php'); ?>
-<?php include('submit_help.php'); ?>
 <?php
+include('../sidebar.php');
+include('../auth_check.php');
+include('submit_help.php');
+require '../config/db.php';
 
-require '../config/db.php'; // or the correct relative path
+// User ID from session
+$userId = $_SESSION['user_id'] ?? 1;
 
-// Get current page from URL or default to dashboard
-$currentPage = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
-
-// Fetch user data from database (example)
-$userId = 1; // In real app, this would come from session
+// Fetch user info
 $userStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $userStmt->execute([$userId]);
 $user = $userStmt->fetch(PDO::FETCH_ASSOC);
 
-// Fetch wallet balance
-$wallet = ['inr_balance' => 0, 'usdt_balance' => 0]; // Default values
-
+// Fetch wallet from database
 try {
     $walletStmt = $pdo->prepare("SELECT * FROM wallets WHERE user_id = ?");
     $walletStmt->execute([$userId]);
     $walletData = $walletStmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($walletData) {
         $wallet = [
-            'inr_balance' => $walletData['inr_balance'] ?? 0,
-            'usdt_balance' => $walletData['usdt_balance'] ?? 0
+            'inr_balance' => floatval($walletData['inr_balance']),
+            'usdt_balance' => floatval($walletData['usdt_balance'])
         ];
     } else {
-            $initStmt = $pdo->prepare("INSERT INTO wallets (user_id, inr_balance, usdt_balance) VALUES (?, 0, 0)");
-        $initStmt->execute([$userId]);
+        // Insert default wallet if not exists
+        $defaultINR = 3143000;
+        $defaultUSDT = 35000;
+        $initStmt = $pdo->prepare("INSERT INTO wallets (user_id, inr_balance, usdt_balance) VALUES (?, ?, ?)");
+        $initStmt->execute([$userId, $defaultINR, $defaultUSDT]);
+
+        $wallet = [
+            'inr_balance' => $defaultINR,
+            'usdt_balance' => $defaultUSDT
+        ];
     }
 } catch (PDOException $e) {
     error_log("Wallet error: " . $e->getMessage());
+    $wallet = ['inr_balance' => 0, 'usdt_balance' => 0];
 }
+
 // Fetch recent transactions
 $transactions = [];
 try {
@@ -44,26 +50,20 @@ try {
     error_log("Transactions error: " . $e->getMessage());
 }
 
-// Fetch current market price from API (simulated)
-$currentPrice = getCurrentUSDTPrice(); // Function to get live price
-$priceChange24h = get24hPriceChange(); // Function to get 24h change
+// Current USDT price
+$currentPrice = 89.80;
 
-// Function to simulate getting current USDT price
-function getCurrentUSDTPrice() {
-    // In real app, you would call an API like Binance, CoinGecko, etc.
-    $basePrice = 84.32;
-    // Add some random fluctuation to simulate live market
-    return $basePrice + (rand(-100, 100) / 100);
-}
+// Calculate total USDT in INR
+$totalUSDTinINR = $wallet['usdt_balance'] * $currentPrice;
 
-// Function to simulate 24h price change
-function get24hPriceChange() {
-    // In real app, get this from API
-    $baseChange = 2.45;
-    // Add some random fluctuation
-    return $baseChange + (rand(-50, 50) / 100);
-}
+// Total balance including INR + USDT value
+$totalBalance = $wallet['usdt_balance'] * $currentPrice;
+$priceChange24h = 0; // default value
+
+
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -146,7 +146,7 @@ function get24hPriceChange() {
 
     /* ======== Dashboard Grid ======== */
     .dashboard-grid {
-      display: grid;
+     
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 24px;
     }
@@ -330,33 +330,40 @@ header {
     <!-- Dashboard View -->
     <div class="dashboard-grid <?php echo $currentPage === 'dashboard' ? 'active' : ''; ?>" id="dashboard-view">
       <!-- Wallet Summary -->
-      <div class="dashboard-card">
-        <div class="card-header">
-          <h3 class="card-title">
+      <!-- Wallet Summary -->
+<div class="dashboard-card">
+    <div class="card-header">
+        <h3 class="card-title">
             <span class="material-icons-round">account_balance_wallet</span>
             Wallet Summary
-          </h3>
-          <span class="material-icons-round">more_vert</span>
+        </h3>
+        <span class="material-icons-round">more_vert</span>
+    </div>
+    <div class="balance-display">
+        <div style="font-size: 1.7rem; font-weight: 700; color: var(--primary);">
+            ₹<?php echo number_format($totalBalance, 2); ?>
         </div>
-        <div class="balance-display">
-          <div style="font-size: 1.7rem; font-weight: 700; color: var(--primary);">
-          <?php
-$totalBalance = $wallet['inr_balance'] + ($wallet['usdt_balance'] * $currentPrice);
-echo '₹' . number_format($totalBalance, 2);
-?>
-          <div style="display: flex; gap: 24px; margin-top: 20px;">
+        <div style="display: flex; gap: 24px; margin-top: 20px;">
             <div>
-              <div style="color: var(--text-secondary);">USDT Balance</div>
-              <div style="font-size: 1.2rem; font-weight: 600;"><?php echo number_format($wallet['usdt_balance'], 2); ?> USDT</div>
-              <div style="color: var(--text-secondary); font-size: 0.9rem;">₹<?php echo number_format($wallet['usdt_balance'] * $currentPrice, 2); ?></div>
+                <div style="color: var(--text-secondary);">USDT Balance</div>
+                <div style="font-size: 1.2rem; font-weight: 600;">
+                    <?php echo number_format($wallet['usdt_balance'], 2); ?> USDT
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                    ₹<?php echo number_format($totalUSDTinINR, 2); ?>
+                </div>
             </div>
             <div>
-              <div style="color: var(--text-secondary);">INR Balance</div>
-              <div style="font-size: 1.2rem; font-weight: 600;">₹<?php echo number_format($wallet['inr_balance'], 2); ?></div>
+                <div style="color: var(--text-secondary);">INR Balance</div>
+                <div style="font-size: 1.2rem; font-weight: 600;">
+                    ₹<?php echo number_format($wallet['inr_balance'], 2); ?>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
+    </div>
+</div>
+
+
 
       <!-- Market Overview -->
       <div class="dashboard-card">
@@ -396,10 +403,10 @@ echo '₹' . number_format($totalBalance, 2);
         </div>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px;">
          <!-- Buy Crypto Button -->
-<a href="javascript:void(0)" onclick="openBuyModal()" style="background: var(--primary); color: white; padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
+<!-- <a href="javascript:void(0)" onclick="openBuyModal()" style="background: var(--primary); color: white; padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
   <span class="material-icons-round">download</span>
   Buy Crypto
-</a>
+</a> -->
 
 <!-- Modal for Buying USDT -->
 <div id="buyModal" style="display:none; position:fixed; top:20%; left:30%; background:#fff; padding:20px; border-radius:10px; z-index:999; box-shadow: 0 0 10px rgba(0,0,0,0.3); width: 350px;">
@@ -438,17 +445,17 @@ function calculateTotal() {
 }
 </script>
 
-          <a href="../page/sdw/sell.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
+          <!-- <a href="../page/sdw/sell.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
             <span class="material-icons-round">upload</span>
             Sell Crypto
           </a>
           <a href="../page/sdw/deposit.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
             <span class="material-icons-round">account_balance</span>
             Deposit INR
-          </a>
+          </a> -->
           <a href="../page/sdw/withdraw.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
             <span class="material-icons-round">payments</span>
-            Withdraw INR
+            Withdraw USDT
           </a>
         </div>
       </div>

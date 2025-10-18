@@ -9,7 +9,7 @@ $currentPage = isset($_GET['page']) ? $_GET['page'] : 'chart';
 // Simulate fetching historical data
 function getHistoricalData($days = 30) {
     $data = [];
-    $basePrice = 84.50;
+    $basePrice = 89.80;
     $timestamp = time() - ($days * 24 * 60 * 60);
     
     for ($i = 0; $i < ($days * 24); $i++) {

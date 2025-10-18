@@ -6,10 +6,10 @@
 //$username = "root";
 //$password = "";
 //$dbname = "dollario_admin";
-$host = '46.202.161.91';
+$host = 'localhost';
 $dbname = 'u973762102_admin';
-$username = 'u973762102_dollario';
-$password = '876543Kamlesh';
+$username = 'root';
+$password = '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -385,7 +385,7 @@ $activeInvestmentCount = $stmt->fetch(PDO::FETCH_ASSOC)['active_investments'];
             <div class="card shadow-sm  mb-4">
                 <div class="card-body text-center">
                     <h5 class="card-title" style="color: #7f8c8d;"><i class="fas fa-dollar-sign"></i> USDT/INR Rate</h5>
-                    <p class="card-text display-4">80.50</p>
+                    <p class="card-text display-4">89.90</p>
                     <p class="card-text1 text-success"><i class="fas fa-trending-up"></i> 0.5% from last hour</p>
                 </div>
             </div>

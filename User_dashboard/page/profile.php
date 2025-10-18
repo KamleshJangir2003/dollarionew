@@ -34,7 +34,7 @@ $kycStmt->execute([$userId]);
 $kyc = $kycStmt->fetch(PDO::FETCH_ASSOC) ?: ['status' => 'not_verified'];
 
 // Simulated USDT price
-$currentPrice = 84.50 + (rand(-100, 100) / 100);
+$currentPrice = 89.80 + (rand(-100, 100) / 100);
 
 // Bank accounts
 $bankStmt = $pdo->prepare("SELECT * FROM bank_accounts WHERE user_id = ? ORDER BY is_primary DESC, added_on DESC");
@@ -663,6 +663,7 @@ header {
   </div>
   <div class="wallet-item">
     <span>Total Value</span>
+    
     <strong>₹<?php echo number_format($wallet['inr_balance'] + ($wallet['usdt_balance'] * $currentPrice), 2); ?></strong>
   </div>
 </div>

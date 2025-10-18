@@ -10,11 +10,10 @@ include('../templates/header.php'); // Adjust the path if needed
 //$user = "root";
 //$password = "";
 //$dbname = "dollario_admin";//
-$host = '46.202.161.91';
+$host = 'localhost';
 $dbname = 'u973762102_admin';
-$username = 'u973762102_dollario';
-$password = '876543Kamlesh';
-
+$username = 'root';
+$password = '';
 // Fix: use consistent connection variable name
 $conn = new mysqli($host, $username, $password, $dbname);
 
