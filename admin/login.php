@@ -76,8 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             display: flex;
             flex-direction: column;
             position: relative;
-            clip-path: ellipse(100% 100% at 0% 50%);
-            z-index: 1;
+            z-index: 0;
         }
 
         .left-section::before {
@@ -122,6 +121,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             display: flex;
             flex-direction: column;
             justify-content: center;
+            position: relative;
+            z-index: 1;
+            background: #fff;
         }
 
         .form-title {
@@ -179,9 +181,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .message {
-            color: red;
+            color: #dc3545;
+            background: #fff0f0;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 12px 16px;
             margin-bottom: 20px;
-            font-size: 15px;
+            font-size: 14px;
         }
 
         .register-link {
