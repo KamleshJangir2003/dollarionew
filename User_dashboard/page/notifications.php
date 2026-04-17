@@ -148,11 +148,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-color: #f5f7fa;
             color: var(--dark);
             line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
             padding: 0 20px;
         }
 
@@ -204,7 +204,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         /* Main Content */
         .main-content {
+            flex: 1;
             padding: 2rem 0;
+            min-width: 0;
         }
 
         .page-header {
@@ -408,7 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Responsive */
         @media (max-width: 768px) {
             .header-container, .footer-content { flex-direction: column; gap: 1rem; }
-            .main-content { margin-left: 0; }
+            .main-content { padding-top: 60px; }
             .nav-links { flex-wrap: wrap; justify-content: center; }
             .notification-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
         }
