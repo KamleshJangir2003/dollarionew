@@ -15,6 +15,8 @@ try {
     die("Could not connect to the database: " . $e->getMessage());
 }
 
+$error = '';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email    = $_POST['email'];
     $password = $_POST['password'];
@@ -28,18 +30,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $hashed_password = $user['password'];
         $status = $user['status'];
     
-        // Check if user is active and password matches
         if ($status === 'active' && password_verify($password, $hashed_password)) {
             $_SESSION['user_id'] = $id;
-            header("Location: ../page/dashboard.php");  // Redirect to User Dashboard
+            header("Location: ../page/dashboard.php");
             exit;
         } else {
-            echo "Your account is not active or password is incorrect!";
+            $error = "Your account is not active or password is incorrect!";
         }
     } else {
-        echo "User not found!";
+        $error = "User not found!";
     }
-    
 }
 ?>
 
@@ -72,15 +72,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 50%;
             background: #000000;
             color: #D4AF37;
-            background: #000000;
-            color: #D4AF37;
             padding: 60px;
             display: flex;
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            clip-path: ellipse(100% 100% at 0% 50%);
-            z-index: 1;
+            z-index: 0;
         }
 
         .left-section::before {
@@ -103,6 +100,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             display: flex;
             flex-direction: column;
             justify-content: center;
+            position: relative;
+            z-index: 1;
+            background: #fff;
         }
 
         .logo {
@@ -291,6 +291,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="right-section">
         <h2 class="form-title">User Login</h2>
         <p class="form-subtitle">Access your account securely</p>
+
+        <?php if ($error): ?>
+            <div style="color:#dc3545;background:#fff0f0;border:1px solid #f5c6cb;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:14px;">
+                <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
 
         <form method="POST" action="login.php">
             <div class="form-group">

@@ -20,6 +20,8 @@
       position: fixed;
       padding: 20px 0;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
      .sidebar.active {
     left: 0;
@@ -67,6 +69,34 @@
       font-size: 20px;
     }
 
+    .menu {
+      flex: 1;
+    }
+
+    .sidebar-logout {
+      margin-top: auto;
+      border-top: 1px solid #1d2e49;
+      background: #0e1a2b;
+    }
+
+    .sidebar-logout a {
+      color: #ff6b6b;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      transition: background 0.3s;
+    }
+
+    .sidebar-logout a:hover {
+      background: #1d2e49;
+    }
+
+    .sidebar-logout a .material-icons {
+      margin-right: 15px;
+      font-size: 20px;
+    }
+
     /* ✅ Hides sidebar below 768px */
     @media (max-width: 768px) {
       .sidebar {
@@ -96,6 +126,9 @@
       <li><a href="notifications.php"><span class="material-icons">notifications</span> Notifications</a></li>
       <li><a href="security.php"><span class="material-icons">lock</span> Security</a></li>
     </ul>
+    <div class="sidebar-logout">
+      <a href="../logout.php"><span class="material-icons">logout</span> Logout</a>
+    </div>
   </div>
   <script>
   document.addEventListener('DOMContentLoaded', function () {
