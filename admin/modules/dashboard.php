@@ -5,9 +5,9 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 <?php include '../templates/header.php'; ?>
 <?php
 $host     = 'localhost';
-$dbname   = 'u973762102_adming';
-$username = 'u973762102_dollario12';
-$password = 'Dollari@98';
+$dbname   = 'u621774021_dollario';
+$username = 'u621774021_dollario';
+$password = 'Copy@75970';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -39,7 +39,7 @@ $totalPages        = ceil($totalTransactions / 5);
 $pendingKycCount      = $pdo->query("SELECT COUNT(*) FROM kyc_documents WHERE status='pending'")->fetchColumn();
 $activeInvestmentCount = $pdo->query("SELECT COUNT(*) FROM investments WHERE status='active'")->fetchColumn();
 
-$mysqli = new mysqli("localhost", "root", "", "u973762102_admin");
+$mysqli = new mysqli("localhost", "u621774021_dollario", "Copy@75970", "u621774021_dollario");
 ?>
 
 <!DOCTYPE html>
