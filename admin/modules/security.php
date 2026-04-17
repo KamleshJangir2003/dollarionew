@@ -3,9 +3,9 @@
 <?php
 // DB config
 $host = 'localhost';
-$username = 'root';
-$password = '';
-$database = 'u973762102_admin';
+$dbname = 'u973762102_adming';
+$username = 'u973762102_dollario12';
+$password = 'Dollari@98';
 
 $connection = mysqli_connect($host, $username, $password, $database);
 if (!$connection) {

@@ -6,10 +6,10 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // ✅ Database credentials
-$host = 'localhost'; // Localhost for XAMPP
-$username = 'root';
-$password = ''; // Blank for XAMPP by default
-$database = 'u973762102_admin'; // Ensure this DB is created locally
+$host = 'localhost';
+$dbname = 'u973762102_adming';
+$username = 'u973762102_dollario12';
+$password = 'Dollari@98'; // Ensure this DB is created locally
 
 // ✅ Connect to database
 $conn = mysqli_connect($host, $username, $password, $database);

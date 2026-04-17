@@ -12,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $stmt = $conn->prepare("SELECT * FROM admin_users WHERE email = ? LIMIT 1");
     $stmt->bind_param("s", $email);
-    $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -22,9 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Set full admin details in session
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['email'] = $user['email'];
-    $_SESSION['username'] = $user['username']; // Assuming you have 'name' column
-    $_SESSION['phone'] = $user['phone']; // Optional
-    $_SESSION['profile_picture'] = $user['profile_picture']; // Optional
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['phone'] = $user['phone'];
 
     // Log IP & agent
     $ip_address = $_SERVER['REMOTE_ADDR'];
