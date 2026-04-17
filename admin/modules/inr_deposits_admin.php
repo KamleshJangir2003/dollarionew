@@ -1,7 +1,5 @@
 <?php
 include "../includes/db.php";
-include '../templates/sidebar.php';
-include '../templates/header.php';
 
 // Handle approve/reject
 if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id'])) {
@@ -30,6 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
     header("Location: inr_deposits_admin.php");
     exit;
 }
+
+include '../templates/sidebar.php';
+include '../templates/header.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

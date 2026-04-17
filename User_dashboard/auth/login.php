@@ -310,7 +310,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <p class="register-link">Don't have an account? <a href="signup.php">Sign Up</a></p>
         <form method="POST" action="guest_login.php">
-    <button type="submit" class="btn btn-secondary">Continue as Guest</button>
+    <!-- <button type="submit" class="btn btn-secondary">Continue as Guest</button> -->
 </form>
 
         <p class="terms">By signing in, you agree to our <a href="..\terms-condistion.php">Terms and Conditions</a> &amp; <a href="..\privacy-policy.php">Privacy Policy</a>.</p>

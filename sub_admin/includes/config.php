@@ -1,9 +1,9 @@
 <?php
 // config.php
 $host = 'localhost';
-$db   = 'dollario_admin';
-$user = 'root';
-$pass = '';
+$db   = 'u621774021_dollario';
+$user = 'u621774021_dollario';
+$pass = 'Copy@75970';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
