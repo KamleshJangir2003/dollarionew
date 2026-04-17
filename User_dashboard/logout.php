@@ -2,6 +2,7 @@
 session_start();
 session_unset();
 session_destroy();
-header("Location: auth/login.php");  // Redirect to login page
+session_write_close();
+header("Location: auth/login.php");
 exit;
 ?>

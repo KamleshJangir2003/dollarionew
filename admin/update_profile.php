@@ -18,6 +18,9 @@ $stmt->bind_param("sssi", $username, $email, $phone, $user_id);
 
 if ($stmt->execute()) {
     $_SESSION['success'] = "Profile updated successfully.";
+    $_SESSION['username'] = $username;
+    $_SESSION['email']    = $email;
+    $_SESSION['phone']    = $phone;
 } else {
     $_SESSION['error'] = "Error updating profile.";
 }

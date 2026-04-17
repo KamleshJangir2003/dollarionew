@@ -19,6 +19,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $status = $user['status'];
     
         if ($status === 'active' && password_verify($password, $hashed_password)) {
+            session_unset();
+            session_destroy();
+            session_start();
+            session_regenerate_id(true);
             $_SESSION['user_id'] = $id;
             header("Location: ../page/dashboard.php");
             exit;

@@ -15,9 +15,18 @@ $currentPage = isset($_GET['page']) ? $_GET['page'] : 'profile';
 $userId = $_SESSION['user_id'];
 
 // Fetch user profile
-$userStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-$userStmt->execute([$userId]);
-$user = $userStmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $userStmt = $pdo->prepare("SELECT id, username, email, mobile, status, two_fa_enabled, ip_address FROM users WHERE id = ?");
+    $userStmt->execute([$userId]);
+    $user = $userStmt->fetch(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $user = null;
+}
+if (!$user) {
+    // fallback: try again with fresh query
+    $userStmt2 = $pdo->query("SELECT id, username, email, mobile, status, two_fa_enabled, ip_address FROM users WHERE id = " . intval($userId));
+    $user = $userStmt2 ? $userStmt2->fetch(PDO::FETCH_ASSOC) : null;
+}
 
 // Wallet balance
 $walletStmt = $pdo->prepare("SELECT * FROM wallets WHERE user_id = ?");
@@ -46,10 +55,16 @@ $usersStmt = $pdo->query("SELECT * FROM users");
 $users = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Flash messages
-if (isset($_GET['success']) && $_GET['success'] == 'profile_updated') {
-    echo "<p style='color:green;'>Profile updated successfully!</p>";
-} elseif (isset($_GET['error']) && $_GET['error'] == 'update_failed') {
-    echo "<p style='color:red;'>Failed to update profile. Try again.</p>";
+$flash_success = '';
+$flash_error   = '';
+if (isset($_GET['success'])) {
+    if ($_GET['success'] === 'profile_updated')  $flash_success = 'Profile updated successfully!';
+    if ($_GET['success'] === 'password_changed') $flash_success = 'Password changed successfully!';
+}
+if (isset($_GET['error'])) {
+    if ($_GET['error'] === 'update_failed')       $flash_error = 'Failed to update. Please try again.';
+    if ($_GET['error'] === 'incorrect_password')  $flash_error = 'Current password is incorrect.';
+    if ($_GET['error'] === 'password_mismatch')   $flash_error = 'New passwords do not match.';
 }
 
 
@@ -319,6 +334,18 @@ if (isset($_GET['success']) && $_GET['success'] == 'profile_updated') {
       </div>
     </div>
 
+    <!-- Flash Messages -->
+    <?php if ($flash_success): ?>
+      <div style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <span class="material-icons-round" style="font-size:18px;">check_circle</span><?php echo $flash_success; ?>
+      </div>
+    <?php endif; ?>
+    <?php if ($flash_error): ?>
+      <div style="background:#fef2f2;color:#991b1b;border:1px solid #fecaca;padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <span class="material-icons-round" style="font-size:18px;">error</span><?php echo $flash_error; ?>
+      </div>
+    <?php endif; ?>
+
     <!-- Profile Card -->
     <div class="profile-card">
       <div class="profile-header">
@@ -327,7 +354,7 @@ if (isset($_GET['success']) && $_GET['success'] == 'profile_updated') {
         </div>
         <div class="profile-info">
           <h2><?php echo htmlspecialchars($user['username'] ?? 'Not set'); ?></h2>
-          <p>Member since <?php echo date('M Y', strtotime($user['created_at'] ?? 'now')); ?></p>
+          <p>Member since <?php echo !empty($user['created_at']) ? date('M Y', strtotime($user['created_at'])) : 'N/A'; ?></p>
         </div>
       </div>
 
@@ -353,14 +380,12 @@ if (isset($_GET['success']) && $_GET['success'] == 'profile_updated') {
 
       <div class="info-item">
         <span class="info-label">Phone</span>
-        <span class="info-value"><?php echo htmlspecialchars($user['phone'] ?? 'Not set'); ?></span>
+        <span class="info-value"><?php echo htmlspecialchars($user['mobile'] ?? 'Not set'); ?></span>
       </div>
 
       <div class="info-item">
         <span class="info-label">Date of Birth</span>
-        <span class="info-value">
-          <?php echo isset($user['dob']) ? date('d M Y', strtotime($user['dob'])) : 'Not set'; ?>
-        </span>
+        <span class="info-value">Not set</span>
       </div>
     </div>
     <!---- Guest Personal Information -->
@@ -452,9 +477,9 @@ if (isset($_GET['success']) && $_GET['success'] == 'profile_updated') {
 <div id="edit-profile" class="form-section">
   <h3>Edit Profile</h3>
  <form action="../includes/edit_profile.php" method="POST">
-  <input type="text" name="name" placeholder="Full Name" required>
-  <input type="email" name="email" placeholder="Email Address" required>
-  <input type="text" name="phone" placeholder="Phone Number" required>
+  <input type="text" name="name" placeholder="Full Name" value="<?php echo htmlspecialchars($user['username'] ?? ''); ?>" required>
+  <input type="email" name="email" placeholder="Email Address" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>" required>
+  <input type="text" name="phone" placeholder="Phone Number" value="<?php echo htmlspecialchars($user['mobile'] ?? ''); ?>" required>
   <button type="submit">Save Changes</button>
 </form>
 
@@ -613,7 +638,7 @@ $bankAccounts = $bankStmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="info-item">
       <span class="info-label">Last Login</span>
       <span class="info-value">
-        <?php echo date('d M Y, h:i A', strtotime($user['last_login'] ?? 'now')); ?>
+        <?php echo !empty($user['last_login']) ? date('d M Y, h:i A', strtotime($user['last_login'])) : 'N/A'; ?>
         <span style="color: var(--text-secondary); font-size: 0.8rem;">
           (<?php echo htmlspecialchars($user['ip_address'] ?? $_SERVER['REMOTE_ADDR']); ?>)
         </span>

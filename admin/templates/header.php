@@ -14,7 +14,7 @@ $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
     padding: 0 20px;
     height: 58px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    margin-left: 250px;
+    margin-left: 280px;
     position: sticky;
     top: 0;
     z-index: 900;
@@ -141,9 +141,9 @@ $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
     <div class="adm-user-drop" id="admUserBtn">
       👤 <?= htmlspecialchars($_SESSION['user_name']) ?> ▼
       <div class="adm-drop-menu" id="admDropMenu">
-        <a href="../profile.php"><i class="fas fa-user"></i> My Profile</a>
-        <a href="../settings.php"><i class="fas fa-cog"></i> Settings</a>
-        <a href="../login.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <a href="/dollario-new/admin/profile.php"><i class="fas fa-user"></i> My Profile</a>
+        <a href="/dollario-new/admin/settings.php"><i class="fas fa-cog"></i> Settings</a>
+        <a href="/dollario-new/admin/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
       </div>
     </div>
   </div>

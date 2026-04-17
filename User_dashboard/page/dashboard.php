@@ -16,10 +16,9 @@ try {
     if ($walletData) {
         $wallet = ['inr_balance' => floatval($walletData['inr_balance']), 'usdt_balance' => floatval($walletData['usdt_balance'])];
     } else {
-        $defaultINR = 3143000; $defaultUSDT = 35000;
-        $initStmt = $pdo->prepare("INSERT INTO wallets (user_id, inr_balance, usdt_balance) VALUES (?, ?, ?)");
-        $initStmt->execute([$userId, $defaultINR, $defaultUSDT]);
-        $wallet = ['inr_balance' => $defaultINR, 'usdt_balance' => $defaultUSDT];
+        $initStmt = $pdo->prepare("INSERT INTO wallets (user_id, inr_balance, usdt_balance) VALUES (?, 0, 0)");
+        $initStmt->execute([$userId]);
+        $wallet = ['inr_balance' => 0, 'usdt_balance' => 0];
     }
 } catch (PDOException $e) {
     $wallet = ['inr_balance' => 0, 'usdt_balance' => 0];
