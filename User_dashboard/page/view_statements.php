@@ -5,14 +5,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$host = 'localhost';
-$dbname = 'u973762102_adming';
-$username = 'u973762102_dollario12';
-$password = 'Dollari@98';
-$pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+require_once __DIR__ . '/../config/db.php';
 
 $userId = $_SESSION['user_id'];
 $bankId = $_GET['bank_id'] ?? null;

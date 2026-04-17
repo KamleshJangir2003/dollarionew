@@ -7,16 +7,7 @@ if (!$user_id) {
     die("User not logged in.");
 }
 
-// DB connection
-$host = 'localhost';
-$dbname = 'u973762102_adming';
-$username = 'u973762102_dollario12';
-$password = 'Dollari@98';
-
-$conn = new mysqli($host, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../config/db.php';
 
 // Fetch referral code
 $stmt = $conn->prepare("SELECT referral_code FROM users WHERE id = ?");

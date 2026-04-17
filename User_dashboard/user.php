@@ -1,15 +1,5 @@
 <?php
-// Database connection (example)
-$host = 'localhost';
-$dbname = 'u973762102_adming';
-$username = 'u973762102_dollario12';
-$password = 'Dollari@98';
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Could not connect to the database: " . $e->getMessage());
-}
+require_once __DIR__ . '/../config/db.php';
 
 // Get current page from URL or default to dashboard
 $currentPage = isset($_GET['page']) ? $_GET['page'] : 'dashboard';

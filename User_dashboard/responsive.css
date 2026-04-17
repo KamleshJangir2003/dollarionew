@@ -24,7 +24,7 @@ body {
 .container,
 .kyc-wrapper,
 .dash-over {
-  margin-left: 120px;
+  margin-left: 250px;
   width: calc(100% - 250px);
   min-width: 0;
   box-sizing: border-box;
