@@ -138,7 +138,9 @@
 
       <li class="section">Financial</li>
       <li><a href="../modules/usdt_deposits.php"><span class="material-icons">account_balance_wallet</span> USDT Deposits</a></li>
+      <li><a href="../modules/inr_deposits_admin.php"><span class="material-icons">add_card</span> INR Deposits</a></li>
       <li><a href="../modules/inr_withdrawals.php"><span class="material-icons">money_off</span> INR Withdrawals</a></li>
+      <li><a href="../modules/transaction_reports.php"><span class="material-icons">receipt_long</span> Transaction Reports</a></li>
 
       <li class="section">Marketing</li>
       <li><a href="../modules/referral_system.php"><span class="material-icons">group_add</span> Referral System</a></li>

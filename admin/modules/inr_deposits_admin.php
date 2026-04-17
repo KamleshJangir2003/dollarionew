@@ -6,26 +6,28 @@ include '../templates/header.php';
 // Handle approve/reject
 if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id'])) {
     $id     = intval($_POST['id']);
-    $action = $_POST['action'] === "approve" ? "Approved" : "Rejected";
+    $action = $_POST['action'];
 
-    if ($action === "Approved") {
-        // Update status
-        $conn->query("UPDATE inr_withdrawals SET status = 'Approved', approved_at = NOW() WHERE id = $id");
-        // Update user_transactions status
-        $row = $conn->query("SELECT user_id, amount FROM inr_withdrawals WHERE id = $id")->fetch_assoc();
-        if ($row) {
-            $conn->query("UPDATE user_transactions SET status = 'completed' WHERE user_id = {$row['user_id']} AND type = 'withdraw_inr' AND amount = {$row['amount']} AND status = 'pending' LIMIT 1");
-        }
-    } else {
-        // Rejected — refund INR back to wallet
-        $row = $conn->query("SELECT user_id, amount FROM inr_withdrawals WHERE id = $id AND status = 'Pending'")->fetch_assoc();
-        if ($row) {
+    $row = $conn->query("SELECT * FROM inr_deposits WHERE id = $id")->fetch_assoc();
+
+    if ($row && $row['status'] === 'pending') {
+        if ($action === 'approve') {
+            // Credit INR to wallet
             $conn->query("UPDATE wallets SET inr_balance = inr_balance + {$row['amount']} WHERE user_id = {$row['user_id']}");
-            $conn->query("UPDATE user_transactions SET status = 'rejected' WHERE user_id = {$row['user_id']} AND type = 'withdraw_inr' AND amount = {$row['amount']} AND status = 'pending' LIMIT 1");
+            // If wallet doesn't exist, create it
+            if ($conn->affected_rows === 0) {
+                $conn->query("INSERT INTO wallets (user_id, inr_balance, usdt_balance) VALUES ({$row['user_id']}, {$row['amount']}, 0)");
+            }
+            // Update deposit status
+            $conn->query("UPDATE inr_deposits SET status = 'approved', approved_at = NOW() WHERE id = $id");
+            // Update user_transactions
+            $conn->query("UPDATE user_transactions SET status = 'completed' WHERE user_id = {$row['user_id']} AND type = 'deposit' AND amount = {$row['amount']} AND status = 'pending' LIMIT 1");
+        } else {
+            $conn->query("UPDATE inr_deposits SET status = 'rejected' WHERE id = $id");
+            $conn->query("UPDATE user_transactions SET status = 'rejected' WHERE user_id = {$row['user_id']} AND type = 'deposit' AND amount = {$row['amount']} AND status = 'pending' LIMIT 1");
         }
-        $conn->query("UPDATE inr_withdrawals SET status = 'Rejected' WHERE id = $id");
     }
-    header("Location: inr_withdrawals.php");
+    header("Location: inr_deposits_admin.php");
     exit;
 }
 ?>
@@ -33,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>INR Withdrawals - Admin</title>
+  <title>INR Deposits - Admin</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     .container { margin-left: 260px; }
@@ -45,13 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
 </head>
 <body>
 <div class="container mt-5">
-  <h2 class="mb-4">💸 INR Withdrawal Requests</h2>
+  <h2 class="mb-4">💰 INR Deposit Requests</h2>
 
-  <!-- Stats -->
   <?php
-  $pending  = $conn->query("SELECT COUNT(*) as c FROM inr_withdrawals WHERE status='Pending'")->fetch_assoc()['c'];
-  $approved = $conn->query("SELECT COUNT(*) as c FROM inr_withdrawals WHERE status='Approved'")->fetch_assoc()['c'];
-  $totalAmt = $conn->query("SELECT SUM(amount) as s FROM inr_withdrawals WHERE status='Approved'")->fetch_assoc()['s'] ?? 0;
+  $pending  = $conn->query("SELECT COUNT(*) as c FROM inr_deposits WHERE status='pending'")->fetch_assoc()['c'];
+  $approved = $conn->query("SELECT COUNT(*) as c FROM inr_deposits WHERE status='approved'")->fetch_assoc()['c'];
+  $totalAmt = $conn->query("SELECT SUM(amount) as s FROM inr_deposits WHERE status='approved'")->fetch_assoc()['s'] ?? 0;
   ?>
   <div class="row mb-4">
     <div class="col-md-4">
@@ -66,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
     </div>
     <div class="col-md-4">
       <div class="card text-center border-primary">
-        <div class="card-body"><h5>Total Paid Out</h5><h3 class="text-primary">₹<?= number_format($totalAmt, 2) ?></h3></div>
+        <div class="card-body"><h5>Total Credited</h5><h3 class="text-primary">₹<?= number_format($totalAmt, 2) ?></h3></div>
       </div>
     </div>
   </div>
@@ -76,9 +77,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
       <tr>
         <th>#</th>
         <th>User</th>
-        <th>Amount (INR)</th>
+        <th>Amount</th>
         <th>Method</th>
-        <th>Account Details</th>
+        <th>UTR / Reference</th>
         <th>Status</th>
         <th>Requested At</th>
         <th>Approved At</th>
@@ -87,15 +88,15 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
     </thead>
     <tbody>
       <?php
-      $sql = "SELECT w.*, u.username, u.email
-              FROM inr_withdrawals w
-              LEFT JOIN users u ON w.user_id = u.id
-              ORDER BY w.requested_at DESC";
+      $sql = "SELECT d.*, u.username, u.email
+              FROM inr_deposits d
+              LEFT JOIN users u ON d.user_id = u.id
+              ORDER BY d.created_at DESC";
       $result = $conn->query($sql);
       $count = 1;
       if ($result && $result->num_rows > 0):
         while ($row = $result->fetch_assoc()):
-          $badgeClass = strtolower($row['status']) === 'pending' ? 'badge-pending' : (strtolower($row['status']) === 'approved' ? 'badge-approved' : 'badge-rejected');
+          $badgeClass = $row['status'] === 'pending' ? 'badge-pending' : ($row['status'] === 'approved' ? 'badge-approved' : 'badge-rejected');
       ?>
       <tr>
         <td><?= $count++ ?></td>
@@ -105,17 +106,17 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
         </td>
         <td><strong>₹<?= number_format($row['amount'], 2) ?></strong></td>
         <td><?= htmlspecialchars($row['method']) ?></td>
-        <td><?= htmlspecialchars($row['account_details']) ?></td>
-        <td><span class="badge <?= $badgeClass ?> px-2 py-1"><?= $row['status'] ?></span></td>
-        <td><?= $row['requested_at'] ?></td>
+        <td><code><?= htmlspecialchars($row['utr_number'] ?? '—') ?></code></td>
+        <td><span class="badge <?= $badgeClass ?> px-2 py-1"><?= ucfirst($row['status']) ?></span></td>
+        <td><?= $row['created_at'] ?></td>
         <td><?= $row['approved_at'] ?? '—' ?></td>
         <td>
-          <?php if ($row['status'] === 'Pending'): ?>
+          <?php if ($row['status'] === 'pending'): ?>
             <form method="POST" style="display:inline-block;">
               <input type="hidden" name="id" value="<?= $row['id'] ?>">
               <button name="action" value="approve" class="btn btn-success btn-sm">✅ Approve</button>
             </form>
-            <form method="POST" style="display:inline-block;" onsubmit="return confirm('Reject and refund?')">
+            <form method="POST" style="display:inline-block;" onsubmit="return confirm('Reject this deposit?')">
               <input type="hidden" name="id" value="<?= $row['id'] ?>">
               <button name="action" value="reject" class="btn btn-danger btn-sm">❌ Reject</button>
             </form>
@@ -125,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
         </td>
       </tr>
       <?php endwhile; else: ?>
-      <tr><td colspan="9" class="text-center text-muted">No withdrawal requests found.</td></tr>
+      <tr><td colspan="9" class="text-center text-muted">No deposit requests found.</td></tr>
       <?php endif; ?>
     </tbody>
   </table>
