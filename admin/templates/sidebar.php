@@ -1,168 +1,149 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Dollario Admin Sidebar</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<?php if (session_status() === PHP_SESSION_NONE) session_start(); ?>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
 
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f0f2f5;
-    }
+  .adm-topbar {
+    display: none;
+    background: #0e1a2b;
+    color: white;
+    padding: 10px 16px;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1001;
+  }
+  .adm-topbar img { height: 32px; }
+  .adm-topbar .adm-menu-btn {
+    background: none; border: none;
+    color: white; font-size: 26px; cursor: pointer; line-height: 1;
+  }
 
-    .topbar {
-      display: none;
-      background: #0e1a2b;
-      color: white;
-      padding: 10px 20px;
-      justify-content: space-between;
-      align-items: center;
-    }
+  .adm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+  }
+  .adm-overlay.active { display: block; }
 
-    .topbar img {
-      width: 150px;
-    }
+  .adm-sidebar {
+    width: 250px;
+    height: 100vh;
+    background: #0e1a2b;
+    color: white;
+    position: fixed;
+    top: 0; left: 0;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+  }
 
-    .material-icons.menu-toggle {
-      font-size: 30px;
-      cursor: pointer;
-    }
+  .adm-sidebar .adm-logo {
+    text-align: center;
+    padding: 20px 0 10px;
+    border-bottom: 1px solid #1d2e49;
+  }
+  .adm-sidebar .adm-logo img { width: 150px; }
 
-    .sidebar {
-      width: 250px;
-      height: 100vh;
-      background: #0e1a2b;
-      color: white;
-      position: fixed;
-      top: 0;
-      left: 0;
-      padding: 20px 0;
-      overflow-y: auto;
-      transition: transform 0.3s ease;
-    }
+  .adm-menu { list-style: none; padding: 0; margin: 0; flex: 1; }
 
-    .sidebar.hidden {
-      transform: translateX(-100%);
-    }
+  .adm-menu li.section {
+    padding: 10px 20px;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #7a8fa6;
+    background: #0b1624;
+    letter-spacing: 0.5px;
+  }
 
-    .sidebar .logo {
-      text-align: center;
-      margin-bottom: 10px;
-    }
+  .adm-menu li a {
+    color: #cdd8e3;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 11px 20px;
+    transition: background 0.2s;
+    font-size: 13.5px;
+    gap: 12px;
+  }
+  .adm-menu li a:hover,
+  .adm-menu li a.active {
+    background: #1d2e49;
+    color: #fff;
+  }
+  .adm-menu li a .material-icons { font-size: 19px; flex-shrink: 0; }
 
-    .sidebar .logo img {
-      width: 200px;
-    }
+  @media (max-width: 768px) {
+    .adm-topbar { display: flex; }
+    .adm-sidebar { transform: translateX(-100%); }
+    .adm-sidebar.active { transform: translateX(0); }
+  }
 
-    .menu {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+  @media (min-width: 769px) {
+    .adm-topbar { display: none !important; }
+    .adm-sidebar { transform: translateX(0) !important; }
+  }
+</style>
 
-    .menu li.section {
-      padding: 10px 20px;
-      font-size: 13px;
-      text-transform: uppercase;
-      font-weight: bold;
-      color: #aaa;
-      background: #0b1624;
-    }
+<!-- Overlay -->
+<div class="adm-overlay" id="admOverlay"></div>
 
-    .menu li a {
-      color: white;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      padding: 12px 20px;
-      transition: background 0.3s;
-    }
+<!-- Mobile Topbar -->
+<div class="adm-topbar">
+  <img src="../uploads/Dollario-logo.png" alt="Dollario">
+  <button class="adm-menu-btn" id="admMenuBtn">☰</button>
+</div>
 
-    .menu li a:hover,
-    .menu li a.active {
-      background: #1d2e49;
-    }
-
-    .menu li a .material-icons {
-      margin-right: 15px;
-      font-size: 20px;
-    }
-
-    /* Responsive styling */
-    @media (max-width: 768px) {
-      .topbar {
-        display: flex;
-      }
-
-      .sidebar {
-        z-index: 1000;
-        position: fixed;
-        left: 0;
-        top: 0;
-        transform: translateX(-100%);
-      }
-
-      .sidebar.active {
-        transform: translateX(0%);
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Top bar for mobile -->
-  <div class="topbar">
-    <img src="../uploads/Dollario-logo.png" alt="Logo">
-    <span class="material-icons menu-toggle" onclick="toggleSidebar()">menu</span>
+<!-- Sidebar -->
+<div class="adm-sidebar" id="admSidebar">
+  <div class="adm-logo">
+    <img src="../uploads/Dollario-logo.png" alt="Dollario">
   </div>
+  <ul class="adm-menu">
+    <li class="section">Main</li>
+    <li><a href="../modules/dashboard.php"><span class="material-icons">dashboard</span> Dashboard</a></li>
 
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <div class="logo">
-      <img src="../uploads/Dollario-logo.png" alt="Logo">
-    </div>
-    <ul class="menu">
-      <li class="section">Main</li>
-      <li><a href="../modules/dashboard.php" class="active"><span class="material-icons">dashboard</span> Dashboard</a></li>
+    <li class="section">User Management</li>
+    <li><a href="../modules/all_users.php"><span class="material-icons">people</span> All Users</a></li>
+    <li><a href="../modules/kyc_approvals.php"><span class="material-icons">verified_user</span> KYC Approvals</a></li>
+    <li><a href="../modules/login_history.php"><span class="material-icons">history</span> Login History</a></li>
 
-      <li class="section">User Management</li>
-      <li><a href="../modules/all_users.php"><span class="material-icons">people</span> All Users</a></li>
-      <li><a href="../modules/kyc_approvals.php"><span class="material-icons">verified_user</span> KYC Approvals</a></li>
-      <li><a href="../modules/login_history.php"><span class="material-icons">history</span> Login History</a></li>
+    <li class="section">Financial</li>
+    <li><a href="../modules/usdt_deposits.php"><span class="material-icons">account_balance_wallet</span> USDT Deposits</a></li>
+    <li><a href="../modules/inr_deposits_admin.php"><span class="material-icons">add_card</span> INR Deposits</a></li>
+    <li><a href="../modules/inr_withdrawals.php"><span class="material-icons">money_off</span> INR Withdrawals</a></li>
+    <li><a href="../modules/transaction_reports.php"><span class="material-icons">receipt_long</span> Transaction Reports</a></li>
 
-      <li class="section">Financial</li>
-      <li><a href="../modules/usdt_deposits.php"><span class="material-icons">account_balance_wallet</span> USDT Deposits</a></li>
-      <li><a href="../modules/inr_deposits_admin.php"><span class="material-icons">add_card</span> INR Deposits</a></li>
-      <li><a href="../modules/inr_withdrawals.php"><span class="material-icons">money_off</span> INR Withdrawals</a></li>
-      <li><a href="../modules/transaction_reports.php"><span class="material-icons">receipt_long</span> Transaction Reports</a></li>
+    <li class="section">Marketing</li>
+    <li><a href="../modules/referral_system.php"><span class="material-icons">group_add</span> Referral System</a></li>
+    <li><a href="../modules/campaigns.php"><span class="material-icons">campaign</span> Campaigns</a></li>
+    <li><a href="../modules/notifications.php"><span class="material-icons">notifications</span> Notifications</a></li>
 
-      <li class="section">Marketing</li>
-      <li><a href="../modules/referral_system.php"><span class="material-icons">group_add</span> Referral System</a></li>
-      <li><a href="../modules/campaigns.php"><span class="material-icons">campaign</span> Campaigns</a></li>
-      <li><a href="../modules/notifications.php"><span class="material-icons">notifications</span> Notifications</a></li>
+    <li class="section">Administration</li>
+    <li><a href="../modules/sub_admins.php"><span class="material-icons">admin_panel_settings</span> Sub-Admins</a></li>
+    <li><a href="../modules/security.php"><span class="material-icons">security</span> Security</a></li>
+    <li><a href="../modules/audit_logs.php"><span class="material-icons">receipt</span> Audit Logs</a></li>
+    <li><a href="../modules/settings.php"><span class="material-icons">settings</span> Settings</a></li>
+    <li><a href="../modules/admin_help_requests.php"><span class="material-icons">help</span> Help</a></li>
+  </ul>
+</div>
 
-      <li class="section">Administration</li>
-      <li><a href="../modules/sub_admins.php"><span class="material-icons">admin_panel_settings</span> Sub-Admins</a></li>
-      <li><a href="../modules/security.php"><span class="material-icons">security</span> Security</a></li>
-      <li><a href="../modules/audit_logs.php"><span class="material-icons">receipt</span> Audit Logs</a></li>
-      <li><a href="../modules/settings.php"><span class="material-icons">settings</span> Settings</a></li>
-            <li><a href="../modules/admin_help_requests.php"><span class="material-icons">help</span> Help</a></li>
-    </ul>
-  </div>
-
-  <script>
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('hidden');
+<script>
+  (function () {
+    var btn     = document.getElementById('admMenuBtn');
+    var sidebar = document.getElementById('admSidebar');
+    var overlay = document.getElementById('admOverlay');
+    function toggle() {
       sidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
     }
-  </script>
-
-</body>
-</html>
+    if (btn)     btn.addEventListener('click', toggle);
+    if (overlay) overlay.addEventListener('click', toggle);
+  })();
+</script>

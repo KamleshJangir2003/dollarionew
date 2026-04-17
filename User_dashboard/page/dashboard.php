@@ -1,611 +1,452 @@
 <?php
-include('../sidebar.php');
 include('../auth_check.php');
 include('submit_help.php');
 require '../config/db.php';
 
-// User ID from session
 $userId = $_SESSION['user_id'] ?? 1;
 
-// Fetch user info
 $userStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $userStmt->execute([$userId]);
 $user = $userStmt->fetch(PDO::FETCH_ASSOC);
 
-// Fetch wallet from database
 try {
     $walletStmt = $pdo->prepare("SELECT * FROM wallets WHERE user_id = ?");
     $walletStmt->execute([$userId]);
     $walletData = $walletStmt->fetch(PDO::FETCH_ASSOC);
-
     if ($walletData) {
-        $wallet = [
-            'inr_balance' => floatval($walletData['inr_balance']),
-            'usdt_balance' => floatval($walletData['usdt_balance'])
-        ];
+        $wallet = ['inr_balance' => floatval($walletData['inr_balance']), 'usdt_balance' => floatval($walletData['usdt_balance'])];
     } else {
-        // Insert default wallet if not exists
-        $defaultINR = 3143000;
-        $defaultUSDT = 35000;
+        $defaultINR = 3143000; $defaultUSDT = 35000;
         $initStmt = $pdo->prepare("INSERT INTO wallets (user_id, inr_balance, usdt_balance) VALUES (?, ?, ?)");
         $initStmt->execute([$userId, $defaultINR, $defaultUSDT]);
-
-        $wallet = [
-            'inr_balance' => $defaultINR,
-            'usdt_balance' => $defaultUSDT
-        ];
+        $wallet = ['inr_balance' => $defaultINR, 'usdt_balance' => $defaultUSDT];
     }
 } catch (PDOException $e) {
-    error_log("Wallet error: " . $e->getMessage());
     $wallet = ['inr_balance' => 0, 'usdt_balance' => 0];
 }
 
-// Fetch recent transactions
 $transactions = [];
 try {
     $txnStmt = $pdo->prepare("SELECT * FROM user_transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
     $txnStmt->execute([$userId]);
     $transactions = $txnStmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    error_log("Transactions error: " . $e->getMessage());
-}
+} catch (PDOException $e) {}
 
-// Current USDT price
-$currentPrice = 89.80;
-
-// Calculate total USDT in INR
+$currentPrice  = 89.80;
 $totalUSDTinINR = $wallet['usdt_balance'] * $currentPrice;
-
-// Total balance = INR balance + USDT value in INR
-$totalBalance = $wallet['inr_balance'] + ($wallet['usdt_balance'] * $currentPrice);
-$priceChange24h = 0; // default value
-
-
+$totalBalance   = $wallet['inr_balance'] + $totalUSDTinINR;
+$priceChange24h = 0;
 ?>
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DollaRio Pro Dashboard</title>
+  <title>DollaRio - Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Your existing CSS styles here */
     :root {
       --primary: #6366f1;
-      --secondary: #4f46e5;
-      --background: #f8fafc;
+      --primary-light: rgba(99,102,241,0.1);
+      --bg: #f1f5f9;
       --surface: #ffffff;
-      --text-primary: #1e293b;
-      --text-secondary: #64748b;
+      --text: #1e293b;
+      --muted: #64748b;
+      --green: #22c55e;
+      --red: #ef4444;
+      --radius: 14px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+
+    body { background: var(--bg); min-height:100vh; }
+
+    /* ── Mobile Header ── */
+    .mob-header {
+      display: none;
+      background: #0e1a2b;
+      padding: 12px 16px;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 998;
+    }
+    .mob-header img { height: 32px; }
+    .mob-header button {
+      background: none; border: none;
+      color: #fff; font-size: 26px; cursor: pointer; line-height:1;
     }
 
-    body {
-      background: var(--background);
+    /* ── Layout ── */
+    .page-wrap {
+      margin-left: 250px;
+      padding: 24px;
       min-height: 100vh;
-      display: flex;
-      -webkit-font-smoothing: antialiased;
     }
 
-    /* ======== Sidebar ======== */
-    .sidebar {
-      width: 280px;
-      padding: 32px 24px;
-      box-shadow: 2px 0 12px rgba(0,0,0,0.05);
-      transition: 0.3s;
-    }
-
-    .sidebar-header {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 48px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 14px 18px;
-      margin: 8px 0;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: var(--text-secondary);
-    }
-
-    .nav-item.active,
-    .nav-item:hover {
-      background: rgba(99, 102, 241, 0.08);
-      color: var(--primary);
-    }
-
-    /* ======== Main Content ======== */
-    .main-content {
-      flex: 1;
-    
-      display: grid;
-      gap: 24px;
-      margin-left: 260px;
-    }
-
-    /* ======== Dashboard Grid ======== */
-    .dashboard-grid {
-     
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-    }
-
-    /* ======== Cards ======== */
-    .dashboard-card {
-      background: var(--surface);
-      padding: 28px;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-      transition: transform 0.2s ease;
-    }
-
-    .card-header {
+    /* ── Welcome Bar ── */
+    .welcome-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+    }
+    .welcome-bar h2 { font-size: 1.3rem; color: var(--text); font-weight: 600; }
+    .welcome-bar span { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+    .stat-card .label { font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+    .stat-card .value { font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .stat-card .sub   { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    .stat-card.primary { background: var(--primary); }
+    .stat-card.primary .label,
+    .stat-card.primary .value,
+    .stat-card.primary .sub { color: #fff; }
+
+    /* ── Main Grid ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
     }
 
-    .card-title {
-      font-size: 1.1rem;
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .card-head h3 {
+      font-size: 0.95rem;
       font-weight: 600;
-      color: var(--text-primary);
+      color: var(--text);
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
+    }
+    .card-head h3 .material-icons-round { font-size: 18px; color: var(--primary); }
+    .live-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--green);
+      background: rgba(34,197,94,0.1);
+      padding: 3px 8px;
+      border-radius: 20px;
     }
 
-    /* ======== Live Price Graph ======== */
-    .price-graph {
-      height: 150px;
-      background: var(--background);
-      border-radius: 12px;
-      margin: 20px 0;
-      position: relative;
-      overflow: hidden;
-    }
+    /* ── Chart ── */
+    .chart-wrap { height: 130px; position: relative; }
 
-    /* ======== Transaction List ======== */
-    .transaction-list {
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .price-row .p-label { font-size: 0.75rem; color: var(--muted); }
+    .price-row .p-val   { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .price-row .p-change { font-size: 0.9rem; font-weight: 600; }
+    .up   { color: var(--green); }
+    .down { color: var(--red); }
+
+    /* ── Quick Actions ── */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .action-btn {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-    }
-
-    .transaction-item {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 16px;
-      background: var(--background);
+      gap: 6px;
+      padding: 14px 10px;
       border-radius: 12px;
+      background: var(--bg);
+      text-decoration: none;
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: background 0.2s;
     }
+    .action-btn:hover { background: #e2e8f0; }
+    .action-btn .material-icons-round { font-size: 22px; color: var(--primary); }
 
-    .transaction-details {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    /* ── Full-width card ── */
+    .card.full { grid-column: 1 / -1; }
 
-    /* ======== Page Content Styles ======== */
-    .page-content {
-      display: none;
-      grid-column: 1 / -1;
-    }
-
-    .page-content.active {
-      display: block;
-    }
-
-    .page-header {
+    /* ── Transaction List ── */
+    .txn-list { display: flex; flex-direction: column; gap: 10px; }
+    .txn-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      padding: 12px 14px;
+      background: var(--bg);
+      border-radius: 10px;
     }
+    .txn-left  { display: flex; align-items: center; gap: 10px; }
+    .txn-icon  { font-size: 20px; }
+    .txn-title { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+    .txn-date  { font-size: 0.72rem; color: var(--muted); }
+    .txn-amt   { font-size: 0.9rem; font-weight: 600; }
+    .txn-empty { text-align: center; color: var(--muted); padding: 20px; font-size: 0.85rem; }
 
-    .page-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
+    /* ── View All link ── */
+    .view-all { font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 500; }
 
-    /* Responsive styles remain the same */
+    /* ══════════ MOBILE ══════════ */
     @media (max-width: 768px) {
-      .sidebar {
-        position: fixed;
-        left: -280px;
-        z-index: 100;
-        height: 100vh;
-      }
-      
-      .sidebar.active {
-        left: 0;
+      .mob-header { display: flex; }
+
+      .page-wrap {
+        margin-left: 0;
+        padding: 12px;
       }
 
-      .main-content {
-      
-        width: 100%;
-        margin-left: 0;
+      .welcome-bar { margin-bottom: 14px; }
+      .welcome-bar h2 { font-size: 1.1rem; }
+
+      .stats-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
       }
+
+      .stat-card { padding: 14px 16px; }
+      .stat-card .value { font-size: 1.2rem; }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .card { padding: 16px; }
+
+      .actions-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .action-btn { padding: 12px 8px; font-size: 0.75rem; }
+
+      .price-row .p-val { font-size: 1rem; }
+
+      .txn-item { padding: 10px 12px; }
+      .txn-title { font-size: 0.8rem; }
+      .txn-amt   { font-size: 0.82rem; }
     }
 
-    /* Basic Styling */
-/* Default header styles for larger screens */
-
-
-  /* Hide header by default (for screens larger than 768px) */
-header {
-  display: none;
-}
-
-/* Show header only on phone view (768px and below) */
-@media (max-width: 768px) {
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color:#0e1a2b; /* You can change this */
-    color: white;
-  }
-
-  .logo-container {
-    flex: 1;
-    text-align: left;
-  }
-
-  .menu-container {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .menu-btn {
-    
-    background: none;
-    border: none;
-    color: white;
-    font-size: 30px;
-    cursor: pointer;
-  }
-}
-
-
-
+    @media (max-width: 400px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .actions-grid { grid-template-columns: repeat(2, 1fr); }
+      .welcome-bar h2 { font-size: 1rem; }
+    }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
- 
 
-  <!-- Main Content -->
- 
+<?php include('../sidebar.php'); ?>
 
-  <main class="main-content">
-
-  <header>
-  <div class="logo-container">
-       <img src="../image/Dollario-logo .svg" alt="" style="height: auto; width: 150px;">
-  </div>
-  <div class="menu-container">
-    <button class="menu-btn" id="menuToggle">☰</button>
-  </div>
-</header>
+<!-- Mobile Header -->
+<div class="mob-header">
+  <img src="../image/Dollario-logo .svg" alt="Dollario">
+  <button id="menuToggle">☰</button>
+</div>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar'); // or whatever class/id your menu has
-
-    menuBtn.addEventListener('click', function () {
-      sidebar.classList.toggle('active'); // Add or remove class to show/hide menu
+    var btn = document.getElementById('menuToggle');
+    if (btn) btn.addEventListener('click', function () {
+      if (window.toggleUserSidebar) window.toggleUserSidebar();
     });
   });
 </script>
 
+<div class="page-wrap">
 
-
-
-    <!-- Dashboard View -->
-    <div class="dashboard-grid <?php echo $currentPage === 'dashboard' ? 'active' : ''; ?>" id="dashboard-view">
-      <!-- Wallet Summary -->
-      <!-- Wallet Summary -->
-<div class="dashboard-card">
-    <div class="card-header">
-        <h3 class="card-title">
-            <span class="material-icons-round">account_balance_wallet</span>
-            Wallet Summary
-        </h3>
-        <span class="material-icons-round">more_vert</span>
+  <!-- Welcome -->
+  <div class="welcome-bar">
+    <div>
+      <h2>Welcome, <?php echo htmlspecialchars($user['username'] ?? 'User'); ?> 👋</h2>
+      <span><?php echo date('l, d M Y'); ?></span>
     </div>
-    <div class="balance-display">
-        <div style="font-size: 1.7rem; font-weight: 700; color: var(--primary);">
-            ₹<?php echo number_format($totalBalance, 2); ?>
-        </div>
-        <div style="display: flex; gap: 24px; margin-top: 20px;">
-            <div>
-                <div style="color: var(--text-secondary);">USDT Balance</div>
-                <div style="font-size: 1.2rem; font-weight: 600;">
-                    <?php echo number_format($wallet['usdt_balance'], 2); ?> USDT
-                </div>
-                <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                    ₹<?php echo number_format($totalUSDTinINR, 2); ?>
-                </div>
-            </div>
-            <div>
-                <div style="color: var(--text-secondary);">INR Balance</div>
-                <div style="font-size: 1.2rem; font-weight: 600;">
-                    ₹<?php echo number_format($wallet['inr_balance'], 2); ?>
-                </div>
-            </div>
-        </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card primary">
+      <div class="label">Total Balance</div>
+      <div class="value">₹<?php echo number_format($totalBalance, 2); ?></div>
+      <div class="sub">INR + USDT combined</div>
     </div>
-</div>
+    <div class="stat-card">
+      <div class="label">USDT Balance</div>
+      <div class="value"><?php echo number_format($wallet['usdt_balance'], 2); ?> <small style="font-size:0.75rem;font-weight:400">USDT</small></div>
+      <div class="sub">≈ ₹<?php echo number_format($totalUSDTinINR, 2); ?></div>
+    </div>
+    <div class="stat-card">
+      <div class="label">INR Balance</div>
+      <div class="value">₹<?php echo number_format($wallet['inr_balance'], 2); ?></div>
+      <div class="sub">Available to withdraw</div>
+    </div>
+  </div>
 
+  <!-- Main Grid -->
+  <div class="main-grid">
 
-
-      <!-- Market Overview -->
-      <div class="dashboard-card">
-        <div class="card-header">
-          <h3 class="card-title">
-            <span class="material-icons-round">trending_up</span>
-            Market Overview
-          </h3>
-          <div style="color: var(--primary); font-weight: 600;">Live</div>
+    <!-- Market Overview -->
+    <div class="card">
+      <div class="card-head">
+        <h3><span class="material-icons-round">trending_up</span> Market Overview</h3>
+        <span class="live-badge">● Live</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="priceChart"></canvas>
+      </div>
+      <div class="price-row">
+        <div>
+          <div class="p-label">Current Price</div>
+          <div class="p-val">₹<?php echo number_format($currentPrice, 2); ?></div>
         </div>
-        <div class="price-graph">
-          <canvas id="priceChart"></canvas>
-        </div>
-        <div class="market-stats">
-          <div style="display: flex; justify-content: space-between; margin-top: 16px;">
-            <div>
-              <div style="color: var(--text-secondary);">Current Price</div>
-              <div style="font-size: 1.5rem; font-weight: 700;">₹<?php echo number_format($currentPrice, 2); ?></div>
-            </div>
-            <div>
-              <div style="color: var(--text-secondary);">24h Change</div>
-              <div style="color: <?php echo $priceChange24h >= 0 ? '#22c55e' : '#ef4444'; ?>; font-weight: 700;">
-                <?php echo ($priceChange24h >= 0 ? '+' : '') . number_format($priceChange24h, 2); ?>%
-              </div>
-            </div>
+        <div style="text-align:right">
+          <div class="p-label">24h Change</div>
+          <div class="p-change <?php echo $priceChange24h >= 0 ? 'up' : 'down'; ?>">
+            <?php echo ($priceChange24h >= 0 ? '+' : '') . number_format($priceChange24h, 2); ?>%
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Quick Actions -->
-      <div class="dashboard-card">
-        <div class="card-header">
-          <h3 class="card-title">
-            <span class="material-icons-round">flash_on</span>
-            Quick Actions
-          </h3>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px;">
-         <!-- Buy Crypto Button -->
-<!-- <a href="javascript:void(0)" onclick="openBuyModal()" style="background: var(--primary); color: white; padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
-  <span class="material-icons-round">download</span>
-  Buy Crypto
-</a> -->
-
-<!-- Modal for Buying USDT -->
-<div id="buyModal" style="display:none; position:fixed; top:20%; left:30%; background:#fff; padding:20px; border-radius:10px; z-index:999; box-shadow: 0 0 10px rgba(0,0,0,0.3); width: 350px;">
-  <h3 style="margin-bottom: 16px;">Buy USDT</h3>
-  <form action="?page=buysell&action=buy-process" method="POST">
-    <input type="hidden" name="coin" value="USDT">
-    
-    <label>Amount (USDT):</label><br>
-    <input type="number" name="usdt_amount" id="usdt_amount" placeholder="e.g. 10" required oninput="calculateTotal()" style="width:100%; padding:8px; margin-bottom: 12px;"><br>
-
-    <label>Price (INR per USDT):</label><br>
-    <input type="number" name="price" id="price" value="85" required oninput="calculateTotal()" style="width:100%; padding:8px; margin-bottom: 12px;"><br>
-
-    <label><strong>Total (INR):</strong></label><br>
-    <input type="text" id="total" name="total" readonly style="width:100%; padding:8px; margin-bottom: 20px; background: #f0f0f0; border: 1px solid #ccc;"><br>
-
-    <button type="submit" style="background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 6px; width: 100%;">Buy USDT</button>
-    <button type="button" onclick="closeBuyModal()" style="margin-top: 10px; width: 100%;">Cancel</button>
-  </form>
-</div>
-
-<!-- JavaScript -->
-<script>
-function openBuyModal() {
-  document.getElementById('buyModal').style.display = 'block';
-}
-
-function closeBuyModal() {
-  document.getElementById('buyModal').style.display = 'none';
-}
-
-function calculateTotal() {
-  let amount = parseFloat(document.getElementById('usdt_amount').value) || 0;
-  let price = parseFloat(document.getElementById('price').value) || 0;
-  document.getElementById('total').value = (amount * price).toFixed(2);
-}
-</script>
-
-          <a href="../page/sdw/sell.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
-            <span class="material-icons-round">upload</span>
-            Sell Crypto
-          </a>
-          <a href="../page/sdw/deposit.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
-            <span class="material-icons-round">account_balance</span>
-            Deposit INR
-          </a>
-          <a href="../page/sdw/withdraw.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
-            <span class="material-icons-round">payments</span>
-            Withdraw INR
-          </a>
-        </div>
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="card-head">
+        <h3><span class="material-icons-round">flash_on</span> Quick Actions</h3>
       </div>
-
-      <!-- Recent Activity -->
-   <!-- Recent Activity -->
-<div class="dashboard-card">
-    <div class="card-header">
-        <h3 class="card-title">
-            <span class="material-icons-round">notifications</span>
-            Recent Activity
-        </h3>
-        <?php if (!empty($transactions)): ?>
-            <a href="?page=history" style="text-decoration: none; color: var(--primary); font-size: 0.9rem;">View All</a>
-        <?php endif; ?>
+      <div class="actions-grid">
+        <a href="../page/sdw/sell.php" class="action-btn">
+          <span class="material-icons-round">upload</span>Sell Crypto
+        </a>
+        <a href="../page/sdw/deposit.php" class="action-btn">
+          <span class="material-icons-round">account_balance</span>Deposit Crypto
+        </a>
+        <a href="../page/sdw/withdraw.php" class="action-btn">
+          <span class="material-icons-round">payments</span>Withdraw INR
+        </a>
+        <a href="transactions.php" class="action-btn">
+          <span class="material-icons-round">receipt_long</span>History
+        </a>
+      </div>
     </div>
-    <div class="transaction-list">
+
+    <!-- Recent Activity - full width -->
+    <div class="card full">
+      <div class="card-head">
+        <h3><span class="material-icons-round">history</span> Recent Activity</h3>
         <?php if (!empty($transactions)): ?>
-            <?php foreach ($transactions as $txn): ?>
-                <div class="transaction-item">
-                    <div class="transaction-details">
-                        <span class="material-icons-round" style="color: <?php echo in_array($txn['type'], ['deposit', 'buy']) ? '#22c55e' : '#ef4444'; ?>;">
-                            <?php echo in_array($txn['type'], ['deposit', 'buy']) ? 'arrow_circle_up' : 'arrow_circle_down'; ?>
-                        </span>
-                        <div>
-                            <div><?php echo htmlspecialchars($txn['description'] ?? 'Transaction'); ?></div>
-                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                                <?php echo date('d M Y, h:i A', strtotime($txn['created_at'])); ?>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="font-weight: 600; color: <?php echo in_array($txn['type'], ['deposit', 'buy']) ? '#22c55e' : '#ef4444'; ?>;">
-                        <?php echo in_array($txn['type'], ['deposit', 'buy']) ? '+' : '-'; ?>
-                        <?php echo ($txn['currency'] === 'INR' ? '₹' : '') . number_format($txn['amount'], 2); ?>
-                        <?php echo $txn['currency'] === 'USDT' ? ' USDT' : ''; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
-                No recent transactions
+          <a href="transactions.php" class="view-all">View All →</a>
+        <?php endif; ?>
+      </div>
+      <div class="txn-list">
+        <?php if (!empty($transactions)): ?>
+          <?php foreach ($transactions as $txn):
+            $isCredit = in_array($txn['type'], ['deposit', 'buy']);
+            $color    = $isCredit ? 'var(--green)' : 'var(--red)';
+            $icon     = $isCredit ? 'arrow_circle_up' : 'arrow_circle_down';
+            $prefix   = $isCredit ? '+' : '-';
+            $amt      = ($txn['currency'] === 'INR' ? '₹' : '') . number_format($txn['amount'], 2) . ($txn['currency'] === 'USDT' ? ' USDT' : '');
+          ?>
+          <div class="txn-item">
+            <div class="txn-left">
+              <span class="material-icons-round txn-icon" style="color:<?php echo $color; ?>"><?php echo $icon; ?></span>
+              <div>
+                <div class="txn-title"><?php echo htmlspecialchars($txn['description'] ?? ucfirst($txn['type'])); ?></div>
+                <div class="txn-date"><?php echo date('d M Y, h:i A', strtotime($txn['created_at'])); ?></div>
+              </div>
             </div>
+            <div class="txn-amt" style="color:<?php echo $color; ?>"><?php echo $prefix . $amt; ?></div>
+          </div>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <div class="txn-empty">No recent transactions</div>
         <?php endif; ?>
+      </div>
     </div>
+
+  </div><!-- /main-grid -->
+</div><!-- /page-wrap -->
+
+<!-- Buy Modal (responsive) -->
+<div id="buyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:14px;padding:24px;width:100%;max-width:400px;">
+    <h3 style="margin-bottom:16px;font-size:1rem;">Buy USDT</h3>
+    <form action="?page=buysell&action=buy-process" method="POST">
+      <input type="hidden" name="coin" value="USDT">
+      <label style="font-size:0.85rem;">Amount (USDT)</label>
+      <input type="number" name="usdt_amount" id="usdt_amount" placeholder="e.g. 10" required oninput="calcTotal()" style="width:100%;padding:10px;margin:6px 0 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;">
+      <label style="font-size:0.85rem;">Price (INR per USDT)</label>
+      <input type="number" name="price" id="price" value="85" required oninput="calcTotal()" style="width:100%;padding:10px;margin:6px 0 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;">
+      <label style="font-size:0.85rem;font-weight:600;">Total (INR)</label>
+      <input type="text" id="total" name="total" readonly style="width:100%;padding:10px;margin:6px 0 20px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;font-size:0.9rem;">
+      <button type="submit" style="width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:0.95rem;cursor:pointer;">Buy USDT</button>
+      <button type="button" onclick="document.getElementById('buyModal').style.display='none'" style="width:100%;padding:10px;margin-top:8px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;">Cancel</button>
+    </form>
+  </div>
 </div>
-    </div>
 
-    <!-- Other page content views remain the same -->
-  </main>
-
-  <script>
-  
-
-    // Price Chart
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    const priceChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: Array.from({length: 24}, (_, i) => {
-          const d = new Date();
-          d.setHours(d.getHours() - 24 + i);
-          return d.getHours() + ':00';
-        }),
-        datasets: [{
-          label: 'USDT/INR',
-          data: Array.from({length: 24}, () => {
-            const base = <?php echo $currentPrice; ?>;
-            return (base + (Math.random() - 0.5) * 2).toFixed(2);
-          }),
-          borderColor: '#6366f1',
-          backgroundColor: 'rgba(99, 102, 241, 0.1)',
-          tension: 0.4,
-          fill: true,
-          pointRadius: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          }
-        },
-        scales: {
-          x: {
-            display: false
-          },
-          y: {
-            display: false
-          }
-        }
-      }
-    });
-
-    // Simulate live price updates
-    setInterval(() => {
-      // Update chart
-      const newData = priceChart.data.datasets[0].data.slice(1);
-      const lastPrice = parseFloat(newData[newData.length - 1]);
-      newData.push((lastPrice + (Math.random() - 0.5) * 0.5).toFixed(2));
-      priceChart.data.datasets[0].data = newData;
-      priceChart.update();
-      
-      // Update price displays
-      const currentPrice = parseFloat(newData[newData.length - 1]);
-      const previousPrice = parseFloat(newData[newData.length - 2]);
-      const change = ((currentPrice - previousPrice) / previousPrice * 100).toFixed(2);
-      
-      document.querySelectorAll('.market-stats div:nth-child(1) div:last-child').forEach(el => {
-        el.textContent = '₹' + currentPrice.toFixed(2);
-      });
-      
-      document.querySelectorAll('.market-stats div:nth-child(2) div:last-child').forEach(el => {
-        el.textContent = (change >= 0 ? '+' : '') + change + '%';
-        el.style.color = change >= 0 ? '#22c55e' : '#ef4444';
-      });
-    }, 5000);
-
-    // Amount calculation for buy/sell
-    const amountInput = document.getElementById('amount');
-    if (amountInput) {
-      amountInput.addEventListener('input', () => {
-        const amount = parseFloat(amountInput.value) || 0;
-        const usdtAmount = document.getElementById('usdt-amount');
-        const inrAmount = document.getElementById('inr-amount');
-        
-        if (usdtAmount) {
-          const currentPrice = parseFloat(document.querySelector('.market-stats div:nth-child(1) div:last-child').textContent.replace('₹', ''));
-          usdtAmount.value = (amount / currentPrice).toFixed(2);
-        }
-        
-        if (inrAmount) {
-          const currentPrice = parseFloat(document.querySelector('.market-stats div:nth-child(1) div:last-child').textContent.replace('₹', ''));
-          inrAmount.value = (amount * currentPrice).toFixed(2);
-        }
-      });
-    }
-  </script>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.querySelector('.menu-btn');
-    const sidebar = document.querySelector('.sidebar');
+function calcTotal() {
+  var a = parseFloat(document.getElementById('usdt_amount').value) || 0;
+  var p = parseFloat(document.getElementById('price').value) || 0;
+  document.getElementById('total').value = (a * p).toFixed(2);
+}
 
-    if (menuBtn && sidebar) {
-      menuBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('active');
-      });
-    }
-  });
+// Price Chart
+const ctx = document.getElementById('priceChart').getContext('2d');
+const priceChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: Array.from({length: 24}, (_, i) => i + ':00'),
+    datasets: [{
+      data: Array.from({length: 24}, () => (<?php echo $currentPrice; ?> + (Math.random()-0.5)*2).toFixed(2)),
+      borderColor: '#6366f1',
+      backgroundColor: 'rgba(99,102,241,0.08)',
+      tension: 0.4, fill: true, pointRadius: 0, borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { display: false }, y: { display: false } }
+  }
+});
+
+setInterval(() => {
+  const d = priceChart.data.datasets[0].data.slice(1);
+  d.push((parseFloat(d[d.length-1]) + (Math.random()-0.5)*0.5).toFixed(2));
+  priceChart.data.datasets[0].data = d;
+  priceChart.update('none');
+}, 5000);
 </script>
+
 </body>
 </html>

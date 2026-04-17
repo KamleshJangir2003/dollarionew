@@ -73,6 +73,7 @@ while ($row = $result->fetch_assoc()) {
             background-color: #f5f7fa;
             color: #333;
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .material-icons-round {
@@ -94,11 +95,9 @@ while ($row = $result->fetch_assoc()) {
 
         /* Content Area Styles */
         .content-area {
-           
-            margin-left: 0;
-           
-            transition: all 0.3s ease;
             margin-left: 260px;
+            max-width: calc(100vw - 260px);
+            transition: all 0.3s ease;
         }
 
         .page-title {
@@ -442,22 +441,11 @@ while ($row = $result->fetch_assoc()) {
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
-            .content-area {
-                
-                margin-left: 0px;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .campaign-cards {
-                grid-template-columns: 1fr;
-            }
-            .header{
-                margin-left: 0px;
-            }
+            .content-area { margin-left: 0; padding: 12px; max-width: 100%; }
+            .form-row { flex-direction: column; gap: 15px; }
+            .campaign-cards { grid-template-columns: 1fr; }
+            .table-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            table { min-width: 500px; }
         }
     </style>
 </head>
@@ -634,7 +622,7 @@ if ($result->num_rows > 0) {
         </div>
 
         <!-- Campaigns Table -->
-        <div class="data-table-container">
+        <div class="data-table-container" style="overflow-x:auto;">
             <div class="table-header">
                 <div class="table-title">All Campaigns</div>
                 <div class="table-actions">

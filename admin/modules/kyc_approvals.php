@@ -1,4 +1,7 @@
-<?php  include '../templates/sidebar.php'; include '../templates/header.php'; 
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+include '../templates/sidebar.php';
+include '../templates/header.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,6 +46,7 @@
             margin: 1rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             margin-left: 260px;
+            overflow-x: auto;
         }
 
         #kycTable {

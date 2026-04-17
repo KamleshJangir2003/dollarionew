@@ -1,153 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Dollario Admin Sidebar</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f0f2f5;
-    }
-
-    .sidebar {
-      width: 250px;
-      height: 100vh;
-      background: #0e1a2b;
-      color: white;
-      position: fixed;
-      padding: 20px 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-     .sidebar.active {
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="../responsive.css">
+<style>
+  .sidebar {
+    width: 250px;
+    height: 100vh;
+    background: #0e1a2b;
+    color: white;
+    position: fixed;
+    top: 0;
     left: 0;
+    padding: 20px 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+    z-index: 1000;
   }
 
-    .sidebar .logo {
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
-      padding: 10px 0;
-      margin-bottom: 10px;
-    }
+  .sidebar .logo {
+    text-align: center;
+    padding: 10px 0;
+    margin-bottom: 10px;
+  }
 
-    .menu {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+  .sidebar .menu { list-style: none; padding: 0; margin: 0; flex: 1; }
 
-    .menu li.section {
-      padding: 10px 20px;
-      font-size: 13px;
-      text-transform: uppercase;
-      font-weight: bold;
-      color: #aaa;
-      background: #0b1624;
-    }
+  .sidebar .menu li.section {
+    padding: 10px 20px;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #aaa;
+    background: #0b1624;
+  }
 
-    .menu li a {
-      color: white;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      padding: 12px 20px;
-      transition: background 0.3s;
-    }
+  .sidebar .menu li a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    transition: background 0.3s;
+    font-size: 14px;
+  }
 
-    .menu li a:hover,
-    .menu li a.active {
-      background: #1d2e49;
-    }
+  .sidebar .menu li a:hover,
+  .sidebar .menu li a.active { background: #1d2e49; }
 
-    .menu li a .material-icons {
-      margin-right: 15px;
-      font-size: 20px;
-    }
+  .sidebar .menu li a .material-icons { margin-right: 12px; font-size: 20px; }
 
-    .menu {
-      flex: 1;
-    }
+  .sidebar-logout { border-top: 1px solid #1d2e49; }
 
-    .sidebar-logout {
-      margin-top: auto;
-      border-top: 1px solid #1d2e49;
-      background: #0e1a2b;
-    }
+  .sidebar-logout a {
+    color: #ff6b6b;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    transition: background 0.3s;
+  }
 
-    .sidebar-logout a {
-      color: #ff6b6b;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      padding: 16px 20px;
-      transition: background 0.3s;
-    }
+  .sidebar-logout a:hover { background: #1d2e49; }
+  .sidebar-logout a .material-icons { margin-right: 12px; font-size: 20px; }
 
-    .sidebar-logout a:hover {
-      background: #1d2e49;
-    }
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
 
-    .sidebar-logout a .material-icons {
-      margin-right: 15px;
-      font-size: 20px;
-    }
+  .sidebar-overlay.active { display: block; }
 
-    /* ✅ Hides sidebar below 768px */
-    @media (max-width: 768px) {
-      .sidebar {
-       
-      }
-    }
-    
-  </style>
-</head>
-<body>
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.active { transform: translateX(0); }
+  }
+</style>
 
-  <div class="sidebar"> 
-    
-    <div class="logo">
-      
-      <img src="../image/Dollario-logo .svg" alt="" style="height: auto; width: 150px;">
-      
-    </div>
-    <ul class="menu">
-      <li class="section">Main</li>
-      <li><a href="dashboard.php" class="active"><span class="material-icons">dashboard</span> Dashboard</a></li>
-      <li><a href="transactions.php"><span class="material-icons">admin_panel_settings</span> Transactions History</a></li>
-      <li><a href="kyc.php"><span class="material-icons">security</span> KYC</a></li>
-      <li><a href="trading.php"><span class="material-icons">receipt</span> Trading</a></li>
-      <li><a href="profile.php"><span class="material-icons">settings</span> Profile</a></li>
-      <li><a href="referral.php"><span class="material-icons">settings</span> Referral</a></li>
-      <li><a href="notifications.php"><span class="material-icons">notifications</span> Notifications</a></li>
-      <li><a href="security.php"><span class="material-icons">lock</span> Security</a></li>
-    </ul>
-    <div class="sidebar-logout">
-      <a href="../logout.php"><span class="material-icons">logout</span> Logout</a>
-    </div>
+<!-- Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="sidebar" id="sidebar">
+  <div class="logo">
+    <img src="../image/Dollario-logo .svg" alt="Dollario" style="height: auto; width: 150px;">
   </div>
-  <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.querySelector('.menu-btn');
-    const sidebar = document.querySelector('.sidebar');
+  <ul class="menu">
+    <li class="section">Main</li>
+    <li><a href="dashboard.php" class="active"><span class="material-icons">dashboard</span> Dashboard</a></li>
+    <li><a href="transactions.php"><span class="material-icons">receipt_long</span> Transactions</a></li>
+    <li><a href="kyc.php"><span class="material-icons">verified_user</span> KYC</a></li>
+    <li><a href="trading.php"><span class="material-icons">trending_up</span> Trading</a></li>
+    <li><a href="profile.php"><span class="material-icons">person</span> Profile</a></li>
+    <li><a href="referral.php"><span class="material-icons">group_add</span> Referral</a></li>
+    <li><a href="notifications.php"><span class="material-icons">notifications</span> Notifications</a></li>
+    <li><a href="security.php"><span class="material-icons">lock</span> Security</a></li>
+  </ul>
+  <div class="sidebar-logout">
+    <a href="../logout.php"><span class="material-icons">logout</span> Logout</a>
+  </div>
+</div>
 
-    console.log('menuBtn:', menuBtn);
-    console.log('sidebar:', sidebar);
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
 
-    if (menuBtn && sidebar) {
-      menuBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('active');
-      });
-    } else {
-      console.warn('Menu button or sidebar not found');
-    }
-  });
+  function toggleUserSidebar() {
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+  }
+
+  if (overlay) overlay.addEventListener('click', toggleUserSidebar);
+
+  window.toggleUserSidebar = toggleUserSidebar;
+});
 </script>
-
-
-</body>
-</html>

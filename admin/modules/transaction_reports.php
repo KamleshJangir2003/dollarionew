@@ -44,10 +44,13 @@ $stats = $conn->query("SELECT
 <head>
   <meta charset="UTF-8">
   <title>Transaction Reports - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    .wrap { margin-left: 260px; padding: 30px; }
-    @media (max-width: 767px) { .wrap { margin-left: 0; padding: 15px; } .header { margin-left: 0; } }
+    * { box-sizing: border-box; }
+    html, body { overflow-x: hidden; }
+    .wrap { margin-left: 260px; padding: 24px; max-width: calc(100vw - 260px); }
+    @media (max-width: 767px) { .wrap { margin-left: 0; padding: 12px; max-width: 100%; } }
     .stat-card { border-radius: 12px; padding: 20px; color: #fff; }
     .badge-completed { background: #d1e7dd; color: #0f5132; }
     .badge-pending   { background: #fff3cd; color: #856404; }

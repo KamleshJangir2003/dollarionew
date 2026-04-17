@@ -1,0 +1,257 @@
+/* ===== GLOBAL RESPONSIVE FIX - User Dashboard ===== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Sidebar already fixed via sidebar.php */
+
+/* All main wrappers - desktop */
+.main-content,
+.container,
+.kyc-wrapper,
+.dash-over {
+  margin-left: 250px;
+  width: calc(100% - 250px);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Tables - prevent overflow */
+table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.table-responsive-wrapper,
+.data-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===== MOBILE (max 768px) ===== */
+@media (max-width: 768px) {
+
+  body {
+    display: block;
+    overflow-x: hidden;
+  }
+
+  .main-content,
+  .container,
+  .kyc-wrapper,
+  .dash-over {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 12px !important;
+  }
+
+  /* Dashboard grid - single column */
+  .dashboard-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Cards */
+  .dashboard-card {
+    padding: 16px !important;
+    width: 100% !important;
+  }
+
+  /* Profile body grid */
+  .profile-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Action buttons stack */
+  .action-buttons {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .action-buttons .btn,
+  .action-buttons a {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Tables - card style on mobile */
+  table {
+    min-width: 100%;
+  }
+
+  table thead {
+    display: none;
+  }
+
+  table tr {
+    display: block;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    background: #fff;
+    overflow: hidden;
+  }
+
+  table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+    text-align: right;
+  }
+
+  table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #64748b;
+    text-align: left;
+    flex: 1;
+    margin-right: 10px;
+  }
+
+  table td:last-child {
+    border-bottom: none;
+  }
+
+  /* Wallet balance flex wrap */
+  .balance-display > div {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  /* Quick actions grid */
+  .dashboard-card > div[style*="grid-template-columns: repeat(2"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Transaction items */
+  .transaction-item {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* KYC upload grid */
+  .upload-section {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Referral container */
+  .accordion-body table thead {
+    display: table-header-group;
+  }
+
+  .accordion-body table tr {
+    display: table-row;
+    box-shadow: none;
+  }
+
+  .accordion-body table td {
+    display: table-cell;
+    text-align: left;
+  }
+
+  .accordion-body table td::before {
+    display: none;
+  }
+
+  /* Chart container */
+  .chart-container {
+    height: auto !important;
+    padding: 16px !important;
+  }
+
+  #candlestick-chart {
+    height: 300px !important;
+  }
+
+  /* Timeframe buttons scroll */
+  .timeframe-selector {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 6px;
+    display: flex !important;
+    gap: 6px !important;
+  }
+
+  /* Notification items */
+  .notification-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  /* Stats grid */
+  .stats-grid,
+  .row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Buy modal fix */
+  #buyModal {
+    left: 5% !important;
+    width: 90% !important;
+    top: 10% !important;
+  }
+
+  /* Pagination */
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  /* Form rows */
+  .form-row {
+    flex-direction: column !important;
+  }
+
+  /* Info grid */
+  .info-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== SMALL PHONES (max 480px) ===== */
+@media (max-width: 480px) {
+  .stats-grid,
+  .row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-card > div[style*="grid-template-columns: repeat(2"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .card-title {
+    font-size: 0.95rem !important;
+  }
+
+  .balance-display > div:first-child {
+    font-size: 1.3rem !important;
+  }
+}

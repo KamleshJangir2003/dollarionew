@@ -64,16 +64,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         background-color: #f8f9fa;
         margin: 0;
         padding: 0;
+        overflow-x: hidden;
     }
 
     .content {
         margin-top: 20px;
-       margin-left: 260px;
+        margin-left: 260px;
+        max-width: calc(100vw - 260px);
         padding: 30px;
         background-color: #fff;
         border-radius: 10px;
         box-shadow: 0 0 15px rgba(0,0,0,0.1);
-     
     }
     .content h2 {
         text-align: center;
@@ -110,12 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         background-color: #0056b3;
     }
     @media (max-width: 768px) {
-        .header{
-            margin-left: 0;
-        }
-        .content{
-            margin-left: 0;
-        }
+        .content { margin-left: 0; max-width: 100%; padding: 16px; }
     }
 </style>
 

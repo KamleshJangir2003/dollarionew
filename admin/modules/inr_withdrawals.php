@@ -34,10 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
 <head>
   <meta charset="UTF-8">
   <title>INR Withdrawals - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    .container { margin-left: 260px; }
-    @media (max-width: 767px) { .container { margin-left: 0; } .header { margin-left: 0; } }
+    * { box-sizing: border-box; }
+    html, body { overflow-x: hidden; }
+    .container { margin-left: 260px; max-width: calc(100vw - 260px); }
+    @media (max-width: 767px) { .container { margin-left: 0; max-width: 100%; padding: 12px; } }
     .badge-pending  { background: #fff3cd; color: #856404; }
     .badge-approved { background: #d1e7dd; color: #0f5132; }
     .badge-rejected { background: #f8d7da; color: #842029; }
@@ -71,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
     </div>
   </div>
 
+  <div class="table-responsive">
   <table class="table table-bordered table-striped table-hover">
     <thead class="table-dark">
       <tr>
@@ -129,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
       <?php endif; ?>
     </tbody>
   </table>
+  </div>
 </div>
 </body>
 </html>

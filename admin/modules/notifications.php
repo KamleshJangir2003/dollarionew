@@ -119,6 +119,7 @@ $notifications = $result->fetch_all(MYSQLI_ASSOC);
             background-color: #f5f7fa;
             color: #333;
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .material-icons-round {
@@ -142,6 +143,7 @@ $notifications = $result->fetch_all(MYSQLI_ASSOC);
         .content-area {
             margin-left: 260px;
             padding: 20px;
+            max-width: calc(100vw - 260px);
             transition: all 0.3s ease;
         }
 
@@ -419,6 +421,9 @@ $notifications = $result->fetch_all(MYSQLI_ASSOC);
             display: flex;
             border-bottom: 1px solid #eee;
             margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            flex-wrap: nowrap;
         }
 
         .tab {
@@ -478,40 +483,14 @@ $notifications = $result->fetch_all(MYSQLI_ASSOC);
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
-            .content-area {
-                padding: 15px;
-                margin-left: 0;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .notification-item {
-                flex-direction: column;
-            }
-
-            .notification-icon {
-                margin-right: 0;
-                margin-bottom: 10px;
-            }
-
-            .notification-meta {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .notification-actions {
-                justify-content: flex-end;
-            }
-
-            .custom-date-range {
-                flex-direction: column;
-            }
-            .header{
-                margin-left: 0px;
-            }
+            .content-area { padding: 12px; margin-left: 0; max-width: 100%; }
+            .form-row { flex-direction: column; gap: 10px; }
+            .notification-item { flex-direction: column; }
+            .notification-icon { margin-right: 0; margin-bottom: 10px; }
+            .notification-meta { flex-direction: column; gap: 8px; }
+            .notification-actions { justify-content: flex-end; }
+            .custom-date-range { flex-direction: column; }
+            .card-header { flex-wrap: wrap; gap: 8px; }
         }
     </style>
 </head>

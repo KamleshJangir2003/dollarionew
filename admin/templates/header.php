@@ -1,226 +1,177 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    
-}
-$_SESSION['user_name'] = 'Admin';
-$_SESSION['notifications'] = 5;
+// Session should be started in the main page file before including this header
+if (session_status() === PHP_SESSION_NONE) session_start();
+$_SESSION['user_name']      = $_SESSION['user_name'] ?? 'Admin';
+$_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<style>
+  .adm-header {
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 58px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin-left: 250px;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+  }
 
-        .header {
-            background-color: #fefefb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-left: 260px;
-            height: 60px;
-            position: relative;
-        }
+  .adm-search {
+    position: relative;
+    width: 260px;
+  }
+  .adm-search input {
+    width: 100%;
+    padding: 8px 36px 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #e9ecef;
+    font-size: 13px;
+    outline: none;
+  }
+  .adm-search i {
+    position: absolute;
+    right: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: #888; font-size: 13px;
+  }
 
-        .search-box input {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 8px;
-            background-color: #d3d3d3;
-            color: #888;
-            width: 200px;
-        }
+  .adm-header-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
 
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 17px;
-            cursor: pointer;
-            position: relative;
-        }
+  .adm-notif {
+    position: relative;
+    cursor: pointer;
+    font-size: 20px;
+    user-select: none;
+  }
+  .adm-notif-count {
+    position: absolute;
+    top: -6px; right: -8px;
+    background: #b58900;
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 50%;
+    font-weight: 600;
+  }
+  .adm-notif-drop {
+    display: none;
+    position: absolute;
+    top: 36px; right: 0;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    border-radius: 8px;
+    min-width: 240px;
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 999;
+  }
+  .adm-notif-drop p {
+    margin: 0;
+    padding: 11px 16px;
+    border-bottom: 1px solid #f1f1f1;
+    font-size: 13px;
+    color: #333;
+  }
+  .adm-notif-drop p:last-child { border-bottom: none; }
 
-        .notification {
-            position: relative;
-            font-size: 20px;
-        }
+  .adm-user-drop { position: relative; cursor: pointer; font-size: 14px; user-select: none; }
+  .adm-drop-menu {
+    display: none;
+    position: absolute;
+    top: 40px; right: 0;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    border-radius: 8px;
+    min-width: 160px;
+    overflow: hidden;
+    z-index: 999;
+  }
+  .adm-drop-menu.show { display: block; }
+  .adm-drop-menu a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: #333;
+    font-size: 13px;
+    transition: background 0.2s;
+  }
+  .adm-drop-menu a:hover { background: #f5f5f5; }
 
-        .notification-count {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: #b58900;
-            color: white;
-            font-size: 12px;
-            padding: 2px 6px;
-            border-radius: 50%;
-        }
+  @media (max-width: 768px) {
+    .adm-header {
+      margin-left: 0;
+      padding: 0 14px;
+    }
+    .adm-search { display: none; }
+  }
+</style>
 
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 45px;
-            right: 60px;
-            background-color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            border-radius: 6px;
-            min-width: 250px;
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 999;
-        }
+<div class="adm-header">
+  <div class="adm-search">
+    <input type="text" placeholder="Search users, transactions…">
+    <i class="fas fa-search"></i>
+  </div>
 
-        .notification-dropdown p {
-            margin: 0;
-            padding: 12px 16px;
-            border-bottom: 1px solid #eee;
-            font-size: 14px;
-        }
-
-        .notification-dropdown p:last-child {
-            border-bottom: none;
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            background-color: #ddd;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .avatar i {
-            color: #333;
-        }
-
-        .username-dropdown {
-            position: relative;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 45px;
-            right: 0;
-            background-color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            border-radius: 6px;
-            overflow: hidden;
-            min-width: 160px;
-            z-index: 999;
-        }
-
-        .dropdown-menu a {
-            display: block;
-            padding: 10px 16px;
-            text-decoration: none;
-            color: #333;
-            font-size: 16px;
-            transition: background 0.2s;
-        }
-
-        .dropdown-menu a i {
-            margin-right: 8px;
-            font-size: 18px;
-        }
-
-        .dropdown-menu a:hover {
-            background-color: #ddd;
-        }
-
-        .search-box {
-            position: relative;
-            width: 300px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 10px;
-            padding-right: 30px;
-            box-sizing: border-box;
-        }
-
-        .search-box i {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #888;
-        }
-        .dropdown-menu.show {
-    display: block;
-}
-
-    </style>
-</head>
-<body>
-<div class="header">
-    <div class="search-box">
-        <input type="text" placeholder="Search users, transactions" />
-        <i class="fas fa-search"></i>
+  <div class="adm-header-right">
+    <!-- Notifications -->
+    <div class="adm-notif" id="admNotifBtn">
+      🔔
+      <span class="adm-notif-count"><?= $_SESSION['notifications'] ?></span>
+      <div class="adm-notif-drop" id="admNotifDrop">
+        <p>New user registered</p>
+        <p>Deposit request received</p>
+        <p>Password changed successfully</p>
+        <p>Admin logged in</p>
+        <p>New support ticket</p>
+      </div>
     </div>
 
-    <div class="user-section">
-        <!-- 🔔 Notification Icon -->
-        <div class="notification" onclick="toggleNotification()">
-            🔔
-            <span class="notification-count"><?= $_SESSION['notifications'] ?></span>
-
-            <div class="notification-dropdown" id="notificationDropdown">
-                <p>New user registered</p>
-                <p>Deposit request received</p>
-                <p>Password changed successfully</p>
-                <p>Admin logged in</p>
-                <p>New support ticket</p>
-            </div>
-        </div>
-
-        <!-- 👤 User Dropdown -->
-        <div class="username-dropdown" onclick="toggleDropdown()">
-            <?= htmlspecialchars($_SESSION['user_name']) ?> ▼
-            <div class="dropdown-menu" id="userDropdown">
-                <a href="../profile.php"><i class="fas fa-user"></i> My Profile</a>
-                <a href="../settings.php"><i class="fas fa-cog"></i> Settings</a>
-                <a href="../login.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </div>
-        </div>
+    <!-- User dropdown -->
+    <div class="adm-user-drop" id="admUserBtn">
+      👤 <?= htmlspecialchars($_SESSION['user_name']) ?> ▼
+      <div class="adm-drop-menu" id="admDropMenu">
+        <a href="../profile.php"><i class="fas fa-user"></i> My Profile</a>
+        <a href="../settings.php"><i class="fas fa-cog"></i> Settings</a>
+        <a href="../login.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
-    function toggleDropdown() {
-        document.getElementById("userDropdown").classList.toggle("show");
-        document.getElementById("notificationDropdown").style.display = "none";
-    }
+  (function () {
+    var notifBtn  = document.getElementById('admNotifBtn');
+    var notifDrop = document.getElementById('admNotifDrop');
+    var userBtn   = document.getElementById('admUserBtn');
+    var dropMenu  = document.getElementById('admDropMenu');
 
-    function toggleNotification() {
-        const dropdown = document.getElementById("notificationDropdown");
-        const userDropdown = document.getElementById("userDropdown");
-        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-        userDropdown.classList.remove("show");
-    }
-
-    document.addEventListener("click", function(e) {
-        const notif = document.getElementById("notificationDropdown");
-        const user = document.getElementById("userDropdown");
-        const notifBtn = document.querySelector(".notification");
-        const userBtn = document.querySelector(".username-dropdown");
-
-        if (!notifBtn.contains(e.target)) {
-            notif.style.display = "none";
-        }
-        if (!userBtn.contains(e.target)) {
-            user.classList.remove("show");
-        }
+    notifBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = notifDrop.style.display === 'block';
+      notifDrop.style.display = open ? 'none' : 'block';
+      dropMenu.classList.remove('show');
     });
+
+    userBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      dropMenu.classList.toggle('show');
+      notifDrop.style.display = 'none';
+    });
+
+    document.addEventListener('click', function () {
+      notifDrop.style.display = 'none';
+      dropMenu.classList.remove('show');
+    });
+  })();
 </script>
-</body>
-</html>

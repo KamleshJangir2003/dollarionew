@@ -28,76 +28,21 @@ $totalUsers = $conn->query($countUsersSql)->fetch_assoc()['total_users'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>admin-login_history</title>
     <style>
-/* Wrapper */
-div[style*="margin-left:260px"] {
-  background-color: #ffffff;
-  font-family: 'Roboto', sans-serif;
-  padding: 30px;
-}
+* { box-sizing: border-box; }
+html, body { overflow-x: hidden; margin: 0; }
+body { font-family: 'Roboto', sans-serif; background: #fff; }
 
-/* Heading */
-div[style*="margin-left:260px"] h2 {
-  font-size: 24px;
-  color: #1a1a1a;
-  margin-bottom: 10px;
-}
+.dash-over { margin-left: 260px; padding: 20px; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; min-width: 600px; border-collapse: collapse; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+table th { background: #f2f2f2; color: #333; padding: 14px 12px; text-align: left; font-weight: 600; font-size: 14px; border-bottom: 2px solid #e0e0e0; }
+table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; color: #444; }
+table tr:hover td { background: #fafafa; }
 
-div[style*="margin-left:260px"] p {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 20px;
+@media(max-width: 768px) {
+    .dash-over { margin-left: 0; padding: 12px; }
+    table th, table td { font-size: 13px; padding: 8px 10px; }
 }
-
-/* Table */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-/* Table header */
-table th {
-  background-color: #f2f2f2;
-  color: #333;
-  padding: 14px 12px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 14px;
-  border-bottom: 2px solid #e0e0e0;
-}
-
-/* Table body */
-table td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-  font-size: 14px;
-  color: #444;
-}
-
-/* Row hover */
-table tr:hover td {
-  background-color: #fafafa;
-}
-@media screen and (max-width: 768px) {
-  .header{
-    margin-left: 0px;
-  }
-}
-
- .dash-over{
-        margin-left:260px;
-     }
-       @media(max-width:768px) {
-        .dash-over{
-            margin-left:0px;
-             padding:15px;
-        }
-      }
-
-      
     </style>
 </head>
 <body>
@@ -106,6 +51,7 @@ table tr:hover td {
 <div id="content" class="dash-over">
     <h2>Login History</h2>
     <p>Total Records: <?php echo $totalRecords; ?> | Distinct Users: <?php echo $totalUsers; ?></p>
+    <div class="table-scroll">
     <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse: collapse;">
         <tr>
             <th>UserName</th>
@@ -124,7 +70,7 @@ table tr:hover td {
         </tr>
         <?php } ?>
     </table>
-</class=>
+    </div>
 </body>
 </html>
 

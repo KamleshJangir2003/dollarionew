@@ -40,64 +40,23 @@ if (!$result) {
 <head>
     <title>Admin - Help Requests</title>
     <style>
-        body {
-            font-family: Arial;
-            padding: 20px;
-            background: #f9f9f9;
-            margin: 0;
-        }
-
-        h2 {
-            color: #333;
-            text-align: center;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-            padding: 0 10px;
-        }
-
-        table {
-            width: 80%;
-            border-collapse: collapse;
-            margin-left: 260px;
-           
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background: #222;
-            color: #fff;
-        }
-
-        td small {
-            color: #777;
-        }
-
-        @media (max-width: 768px) {
-            table {
-                font-size: 14px;
-                margin-left: 0px;
-           
-            }
-
-            th, td {
-                padding: 8px;
-            }
-
-            .table-container {
-                padding: 0;
-            }
-            .header{
-                margin-left: 0px;
-            }
-        }
+* { box-sizing: border-box; }
+html, body { overflow-x: hidden; margin: 0; }
+body {
+  font-family: Arial;
+  padding: 12px;
+  background: #f9f9f9;
+}
+h2 { color: #333; text-align: center; }
+.table-container { overflow-x: auto; margin-top: 20px; }
+table { width: 100%; border-collapse: collapse; min-width: 500px; }
+th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+th { background: #222; color: #fff; }
+td small { color: #777; }
+@media (max-width: 768px) {
+    table { font-size: 13px; }
+    th, td { padding: 8px; }
+}
     </style>
 </head>
 <body>

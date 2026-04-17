@@ -1,10 +1,8 @@
 <?php
-// Ensure the correct path is provided
+if (session_status() === PHP_SESSION_NONE) session_start();
 include('../templates/sidebar.php');
-include('../templates/header.php'); // Adjust the path if needed
-?>
+include('../templates/header.php');
 
-<?php
 // DB connection
 //$host = "localhost";
 //$user = "root";
@@ -72,6 +70,7 @@ while ($user = $result->fetch_assoc()) {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>admin-All Users</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -79,17 +78,20 @@ while ($user = $result->fetch_assoc()) {
     <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; }
+
+        html, body { overflow-x: hidden; }
+
         body {
             font-family: 'Inter', sans-serif;
             background: #f5f6fa;
             margin: 0;
-
         }
 
         .content-area {
             max-width: 1200px;
-            margin: auto;
             margin-left: 260px;
+            padding: 20px;
         }
 
         .page-title {
@@ -104,9 +106,8 @@ while ($user = $result->fetch_assoc()) {
             background: #fff;
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
         }
 
         .filter-header {
@@ -119,189 +120,143 @@ while ($user = $result->fetch_assoc()) {
 
         .filter-row {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             flex-wrap: wrap;
         }
 
         .form-group {
             flex: 1;
-            min-width: 200px;
+            min-width: 160px;
         }
+
+        .form-group label { font-size: 13px; font-weight: 500; }
 
         .form-control {
             width: 100%;
             padding: 8px 10px;
-            font-size: 16px;
+            font-size: 14px;
             margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
         }
 
         .filter-actions {
-            margin-top: 20px;
+            margin-top: 16px;
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .btn {
-            padding: 10px 16px;
+            padding: 8px 16px;
             border: none;
             cursor: pointer;
             font-size: 14px;
             border-radius: 6px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+            text-decoration: none;
         }
 
-        .btn-outline {
-            background: #f0f0f0;
-        }
+        .btn-outline { background: #f0f0f0; border: 1px solid #ddd; color: #333; }
+        .btn-primary { background: #4CAF50; color: white; }
+        .btn-sm { padding: 4px 8px; font-size: 0.8rem; }
 
-        .btn-primary {
-            background: #3f51b5;
-            color: white;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #fff;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        th,
-        td {
-            padding: 14px 16px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background: #f7f7f7;
-        }
-
-
-
-        /* Add your CSS styles here */
         .data-table-container {
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 20px;
             margin-left: 260px;
-            margin-top: 20px;
-
+            margin-top: 0;
+            margin-right: 20px;
+            margin-bottom: 30px;
         }
 
         .table-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .table-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
+        .table-title { font-size: 1.2rem; font-weight: bold; }
 
-        .btn {
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .table-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-        .btn-outline {
-            border: 1px solid #ddd;
-            background: white;
-        }
-
-        .btn-primary {
-            background: #4CAF50;
-            color: white;
-            border: none;
-        }
-
-        .btn-sm {
-            padding: 4px 8px;
-            font-size: 0.875rem;
-        }
+        .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 560px;
         }
 
-        th,
-        td {
-            padding: 12px 16px;
+        th, td {
+            padding: 12px 14px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
         }
+
+        th { background: #f7f7f7; font-size: 13px; }
+        td { font-size: 13px; }
 
         .status-badge {
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 500;
         }
 
-        .status-completed {
-            background: #e6f7ee;
-            color: #00a854;
-        }
-
-        .status-processing {
-            background: #fff7e6;
-            color: #fa8c16;
-        }
-
-        .status-rejected {
-            background: #fff1f0;
-            color: #f5222d;
-        }
+        .status-approved  { background: #e6f7ee; color: #00a854; }
+        .status-pending   { background: #fff7e6; color: #fa8c16; }
+        .status-rejected  { background: #fff1f0; color: #f5222d; }
 
         .pagination {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 20px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .pagination-controls {
-            display: flex;
-            gap: 8px;
-        }
+        .pagination-info { font-size: 13px; color: #666; }
+
+        .pagination-controls { display: flex; gap: 6px; flex-wrap: wrap; }
 
         .page-item {
-            padding: 8px 12px;
+            padding: 6px 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
         }
 
-        .page-item.active {
-            background: #4CAF50;
-            color: white;
-            border-color: #4CAF50;
-        }
+        .page-item.active { background: #4CAF50; color: white; border-color: #4CAF50; }
+        .page-item.disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .page-item.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
         @media screen and (max-width: 768px) {
-            .header{
-                margin-left: 0px;}
-                .content-area{
-                    margin-left: 0px;
-                }
-                .data-table-container{
-                    margin-left: 0px;
-                }
+            .content-area {
+                margin-left: 0;
+                padding: 12px;
+            }
+            .data-table-container {
+                margin-left: 0;
+                margin-right: 0;
+                padding: 14px;
+                border-radius: 8px;
+            }
+            .filter-row { flex-direction: column; gap: 10px; }
+            .form-group { min-width: 100%; }
+            .table-header { flex-direction: column; align-items: flex-start; }
+            .pagination { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -420,6 +375,7 @@ while ($user = $result->fetch_assoc()) {
                         </button>-->
             </div>
         </div>
+        <div class="table-scroll">
         <table id="usersTable">
             <thead>
                 <tr>
@@ -497,6 +453,7 @@ while ($user = $result->fetch_assoc()) {
 
             </tbody>
         </table>
+        </div><!-- /table-scroll -->
         <div class="pagination">
             <div class="pagination-info">Showing 1 to 5 of 42 entries</div>
             <div class="pagination-controls">

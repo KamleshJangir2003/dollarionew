@@ -26,6 +26,8 @@ $activePage = "Audit Logs";
             padding: 20px;
             background: #f5f7fa;
             min-height: 100vh;
+            max-width: calc(100vw - 260px);
+            overflow-x: hidden;
         }
 
         .page-header {
@@ -219,17 +221,9 @@ $activePage = "Audit Logs";
         }
 
         @media (max-width: 768px) {
-            .content-area {
-                margin-left: 0;
-                padding: 15px;
-            }
-            .header{
-                margin-left: 0px;
-            }
-            
-            .filter-group {
-                flex: 100%;
-            }
+            .content-area { margin-left: 0; padding: 12px; max-width: 100%; }
+            .filter-group { flex: 100%; }
+            .logs-table { min-width: 600px; }
         }
     </style>
 </head>
@@ -292,7 +286,7 @@ $activePage = "Audit Logs";
             </div>
         </div>
 
-        <div class="card">
+        <div class="card" style="overflow-x:auto;">
             <table class="logs-table">
                 <thead>
                     <tr>

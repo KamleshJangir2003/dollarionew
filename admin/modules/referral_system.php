@@ -98,7 +98,7 @@ include '../templates/header.php';
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .content-area { margin-left: 260px; padding: 0; }
+        .content-area { margin-left: 260px; padding: 0; max-width: calc(100vw - 260px); overflow-x: hidden; }
         .modal { display: none; position: fixed; z-index: 1000; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 500px; }
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
@@ -108,12 +108,8 @@ include '../templates/header.php';
         input:checked + .slider { background: #4CAF50; }
         input:checked + .slider:before { transform: translateX(26px); }
         @media (max-width: 768px) {
-            .header{
-                margin-left: 0px;
-            }
-            .content-area{
-                margin-left: 0px;
-            }
+            .content-area { margin-left: 0; padding: 12px; max-width: 100%; }
+            .overflow-x-auto { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         }
     </style>
 </head>

@@ -1,6 +1,6 @@
 <?php
-session_start();
-require '../config/db.php'; // Make sure $pdo is set inside this
+if (session_status() === PHP_SESSION_NONE) session_start();
+require '../config/db.php';
 
 // Redirect if not logged in
 if (!isset($_SESSION['user_id'])) {
@@ -97,10 +97,9 @@ if (isset($_GET['success']) && $_GET['success'] == 'profile_updated') {
     /* ======== Main Content ======== */
     .main-content {
       flex: 1;
-    
       display: grid;
-    
-      margin-left: 260px;
+      padding: 20px;
+      min-width: 0;
     }
 
     /* ======== Page Header ======== */
@@ -293,130 +292,20 @@ if (isset($_GET['success']) && $_GET['success'] == 'profile_updated') {
     }
 
     @media (max-width: 768px) {
-      .main-content {
-       
-        margin-left: 0;
-      }
-
-      .profile-header {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .action-buttons {
-        flex-direction: column;
-      }
-       .sidebar {
-    display: none;
-  }
+      .main-content { margin-left: 0; padding: 12px; }
+      .profile-header { flex-direction: column; text-align: center; }
+      .action-buttons { flex-direction: column; }
     }
-
     @media (max-width: 480px) {
-      .info-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
+      .info-grid { grid-template-columns: 1fr; gap: 8px; }
     }
-
-    /* Default: hide header on desktop */
-header {
-  display: none;
-  background-color: #0e1a2b;
-  padding: 10px 20px;
-  align-items: center;
-  justify-content: space-between;
-  color: white;
-}
-
-/* Show header only on phones/tablets */
-@media (max-width: 768px) {
-  header {
-    display: flex;
-  }
-  .container{
-    margin-left: 0px;
-  }
-}
-
-.logo-container img.logo {
-  width: 150px;
-  height: auto;
-}
-
-.menu-container .menu-btn {
-  font-size: 28px;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
 
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <?php include('../sidebar.php'); ?>
-
-  <!-- Main Content -->
   <main class="main-content">
- <header>
-  <div class="logo-container">
-       <img src="../image/Dollario-logo .svg" alt="" style="height: auto; width: 150px;">
-  </div>
-  <div class="menu-container">
-    <button class="menu-btn" id="menuToggle">☰</button>
-  </div>
-</header>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar'); // or whatever class/id your menu has
-
-    menuBtn.addEventListener('click', function () {
-      sidebar.classList.toggle('active'); // Add or remove class to show/hide menu
-    });
-  });
-</script>
-<style>  /* Hide header by default (for screens larger than 768px) */
-header {
-  display: none;
-}
-
-/* Show header only on phone view (768px and below) */
-@media (max-width: 768px) {
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color:#0e1a2b; /* You can change this */
-    color: white;
-  }
-
-  .logo-container {
-    flex: 1;
-    text-align: left;
-  }
-
-  .menu-container {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .menu-btn {
-    
-    background: none;
-    border: none;
-    color: white;
-    font-size: 30px;
-    cursor: pointer;
-  }
-}
-
-
-
-  </style>
+    <?php include('../mobile_header.php'); ?>
     <div class="page-header">
       <h1 class="page-title">
         <span class="material-icons-round">person</span>

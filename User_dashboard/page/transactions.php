@@ -1,6 +1,6 @@
-<?php include('../sidebar.php'); ?>
-<?php include('submit_help.php'); ?>
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+include('submit_help.php');
 require '../config/db.php';
 
 $userId = $_SESSION['user_id'] ?? 0;
@@ -20,10 +20,10 @@ $countStmt->execute([$userId]);
 $totalTransactions = $countStmt->fetchColumn();
 
 // Fetch paginated records for this user only
-$stmt = $pdo->prepare("SELECT * FROM user_transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT :start, :limit");
-$stmt->bindValue(':start', $start, PDO::PARAM_INT);
-$stmt->bindValue(':limit', $records_per_page, PDO::PARAM_INT);
+$stmt = $pdo->prepare("SELECT * FROM user_transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT ?, ?");
 $stmt->bindValue(1, $userId, PDO::PARAM_INT);
+$stmt->bindValue(2, $start, PDO::PARAM_INT);
+$stmt->bindValue(3, $records_per_page, PDO::PARAM_INT);
 $stmt->execute();
 $transactions = $stmt->fetchAll();
 ?>
@@ -47,8 +47,19 @@ $transactions = $stmt->fetchAll();
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      margin-left: 260px;
     }
+    header {
+      display: none;
+      background: #0e1a2b;
+      padding: 10px 20px;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 998;
+    }
+    .menu-btn { font-size: 28px; background: none; border: none; color: white; cursor: pointer; }
 
     .page-header {
       font-size: 26px;
@@ -110,76 +121,15 @@ $transactions = $stmt->fetchAll();
     }
 
     @media (max-width: 768px) {
-      .container {
-        margin-left: 0;
-        margin: 20px;
-        padding: 20px;
-      }
-
-      table th, table td {
-        font-size: 13px;
-        padding: 10px;
-      }
-
-      .sidebar {
-        display: none;
-      }
+      .container { margin-left: 0; margin: 10px; padding: 15px; }
+      table th, table td { font-size: 13px; padding: 10px; }
+      header { display: flex; }
     }
   </style>
 </head>
 <body>
-<header>
-  <div class="logo-container">
-       <img src="../image/Dollario-logo .svg" alt="" style="height: auto; width: 150px;">
-  </div>
-  <div class="menu-container">
-    <button class="menu-btn" id="menuToggle">☰</button>
-  </div>
-</header>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    menuBtn.addEventListener('click', function () {
-      sidebar.classList.toggle('active');
-    });
-  });
-</script>
-<style>
-header {
-  display: none;
-}
-@media (max-width: 768px) {
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color:#0e1a2b;
-    color: white;
-  }
-
-  .logo-container {
-    flex: 1;
-    text-align: left;
-  }
-
-  .menu-container {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .menu-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 30px;
-    cursor: pointer;
-  }
-}
-</style>
-
+<?php include('../sidebar.php'); ?>
+<?php include('../mobile_header.php'); ?>
 <div class="container">
   <div class="page-header">📄 Transaction History</div>
 

@@ -1,10 +1,6 @@
-<?php include('../sidebar.php'); ?>
-<?php include('submit_help.php'); ?>
 <?php
-// notification.php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) session_start();
+include('submit_help.php');
 
 // DB connection
 $host = 'localhost';
@@ -209,7 +205,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Main Content */
         .main-content {
             padding: 2rem 0;
-            margin-left: 260px;
         }
 
         .page-header {
@@ -412,105 +407,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         /* Responsive */
         @media (max-width: 768px) {
-            .header-container, .footer-content {
-                flex-direction: column;
-                gap: 1rem;
-
-            }
-            .main-content{
-                margin-left: 0%;
-            }
-    
-            
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .notification-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-             .sidebar {
-    display: none;
-  }
+            .header-container, .footer-content { flex-direction: column; gap: 1rem; }
+            .main-content { margin-left: 0; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+            .notification-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
         }
         
     </style>
 </head>
 <body>
-     <header>
-  <div class="logo-container">
-       <img src="../image/Dollario-logo .svg" alt="" style="height: auto; width: 150px;">
-  </div>
-  <div class="menu-container">
-    <button class="menu-btn" id="menuToggle">☰</button>
-  </div>
-</header>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar'); // or whatever class/id your menu has
-
-    menuBtn.addEventListener('click', function () {
-      sidebar.classList.toggle('active'); // Add or remove class to show/hide menu
-    });
-  });
-</script>
-<style>  /* Hide header by default (for screens larger than 768px) */
-header {
-  display: none;
-}
-
-/* Show header only on phone view (768px and below) */
-@media (max-width: 768px) {
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color:#0e1a2b; /* You can change this */
-    color: white;
-  }
-
-  .logo-container {
-    flex: 1;
-    text-align: left;
-  }
-
-  .menu-container {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .menu-btn {
-    
-    background: none;
-    border: none;
-    color: white;
-    font-size: 30px;
-    cursor: pointer;
-  }
-}
-
-
-
-  </style>
-    
-    <!-- Header -->
-    <header>
-        <div class="container header-container">
-            <a href="dashboard.php"></a>
-            <nav class="nav-links">
-                <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="notification.php" class="active"><i class="fas fa-bell"></i> Notifications</a>
-                <a href="profile.php"><i class="fas fa-user"></i> Profile</a>
-                <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </nav>
-        </div>
-    </header>
+  <?php include('../sidebar.php'); ?>
+  <?php include('../mobile_header.php'); ?>
 
     <!-- Main Content -->
     <main class="main-content"> 

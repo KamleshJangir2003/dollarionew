@@ -1261,7 +1261,7 @@ textarea.form-control {
 }
 
 /* ======= Mobile Overrides ======= */
-@media (min-width: 576px) {
+@media (min-width: 769px) {
     .sidebar {
         transform: translateX(0);
     }

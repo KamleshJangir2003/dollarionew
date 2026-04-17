@@ -1,7 +1,6 @@
-<?php include('../sidebar.php'); ?>
-<?php include('submit_help.php'); ?>
 <?php
-require '../config/db.php'; // or the correct relative path
+if (session_status() === PHP_SESSION_NONE) session_start();
+require '../config/db.php';
 
 // Get current page from URL
 $currentPage = isset($_GET['page']) ? $_GET['page'] : 'chart';
@@ -74,13 +73,7 @@ $priceChange = (($currentPrice - $historicalData[count($historicalData)-2]['clos
     }
 
     /* ======== Main Content ======== */
-    .main-content {
-      flex: 1;
-      
-      display: grid;
-      gap: 24px;
-      margin-left: 260px;
-    }
+    .main-content { flex: 1; display: grid; gap: 24px; padding: 20px; min-width: 0; }
 
     /* ======== Page Header ======== */
     .page-header {
@@ -177,144 +170,21 @@ $priceChange = (($currentPrice - $historicalData[count($historicalData)-2]['clos
     }
 
     /* ======== Responsive Styles ======== */
+    header { display: none; background: #0e1a2b; padding: 10px 20px; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 998; }
+    .menu-btn { font-size: 28px; background: none; border: none; color: white; cursor: pointer; }
     @media (max-width: 768px) {
-      .main-content {
-      width: 100%;
-        margin-left: 0;
-      }
-
-      .chart-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-      }
-
-      .timeframe-selector {
-        width: 100%;
-        overflow-x: auto;
-        padding-bottom: 8px;
-      }
-    }
-      header {
-      display: none;
-    }
-     @media (max-width: 768px) {
-  .sidebar {
-    display: none;
-  }
-}
-
-
-  
-    @media (max-width: 768px) {
-      header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 15px;
-        background-color: #0e1a2b;
-        border-bottom: 1px solid #ccc;
-      }
-
-      .logo {
-        width: 150px;
-        max-width: 100%;
-      }
-
-      .menu-btn {
-        font-size: 26px;
-        background: none;
-        border: none;
-        cursor: pointer;
-        display: block;
-      }
-    }
-   
-
-    /* Responsive Styles */
-    @media (max-width: 768px) {
-      .menu-btn {
-        display: block; /* show menu button in phone view */
-      }
-
-      .logo-container {
-        flex: 1;
-      }
-
-      .menu-container {
-        display: flex;
-        justify-content: flex-end;
-        flex: 1;
-      }
+      .main-content { margin-left: 0; padding: 10px; }
+      .chart-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .timeframe-selector { width: 100%; overflow-x: auto; padding-bottom: 8px; }
+      header { display: flex; }
     }
     
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <?php include('../sidebar.php'); ?>
-
-  <!-- Main Content -->
   <main class="main-content">
-  
-   <header>
-  <div class="logo-container">
-       <img src="../image/Dollario-logo .svg" alt="" style="height: auto; width: 150px;">
-  </div>
-  <div class="menu-container">
-    <button class="menu-btn" id="menuToggle">☰</button>
-  </div>
-</header>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar'); // or whatever class/id your menu has
-
-    menuBtn.addEventListener('click', function () {
-      sidebar.classList.toggle('active'); // Add or remove class to show/hide menu
-    });
-  });
-</script>
-<style>  /* Hide header by default (for screens larger than 768px) */
-header {
-  display: none;
-}
-
-/* Show header only on phone view (768px and below) */
-@media (max-width: 768px) {
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color:#0e1a2b; /* You can change this */
-    color: white;
-  }
-
-  .logo-container {
-    flex: 1;
-    text-align: left;
-  }
-
-  .menu-container {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .menu-btn {
-    
-    background: none;
-    border: none;
-    color: white;
-    font-size: 30px;
-    cursor: pointer;
-  }
-}
-
-
-
-  </style>
+    <?php include('../mobile_header.php'); ?>
 
    
 

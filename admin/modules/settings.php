@@ -346,6 +346,7 @@ $activePage = "Settings";
             background-color: #f5f7fa;
             color: #333;
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .material-icons-round {
@@ -367,9 +368,8 @@ $activePage = "Settings";
 
         /* Content Area Styles */
         .content-area {
-           
             margin-left: 260px;
-           
+            max-width: calc(100vw - 260px);
             transition: all 0.3s ease;
         }
 
@@ -679,30 +679,10 @@ $activePage = "Settings";
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
-            .content-area {
-                padding: 15px;
-                margin-left: 0px!important;
-                
-            }
-            .header{
-                margin-left: 0px!important;
-            }
-
-            .tabs {
-                overflow-x: auto;
-                padding-bottom: 5px;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .setting-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
+            .content-area { padding: 12px; margin-left: 0; max-width: 100%; }
+            .tabs { overflow-x: auto; padding-bottom: 5px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .setting-item { flex-direction: column; align-items: flex-start; gap: 10px; }
         }
 
         /* Tab Content */

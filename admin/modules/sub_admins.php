@@ -43,15 +43,16 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     body {
         background-color: #f8f9fa;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow-x: hidden;
     }
 
     .container {
-       
-        margin: auto;
         margin-left: 260px;
+        max-width: calc(100vw - 260px);
         background-color: #fff;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
         border-radius: 10px;
+        overflow-x: auto;
     }
 
     h2 {
@@ -101,20 +102,10 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     @media screen and (max-width: 768px) {
-        .table th, .table td {
-            font-size: 13px;
-            padding: 8px;
-        }
-
-        h2 {
-            font-size: 20px;
-        }
-        .container{
-            margin-left: 0px;
-        }
-        .header{
-            margin-left: 0px;
-        }
+        .table th, .table td { font-size: 13px; padding: 8px; }
+        h2 { font-size: 20px; }
+        .container { margin-left: 0; max-width: 100%; padding: 12px; }
+        .table { min-width: 500px; }
     }
 </style>
 
@@ -122,6 +113,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
     <div class="container mt-4">
     <h2>Sub Admin Management</h2>
+    <div style="overflow-x:auto;">
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -150,6 +142,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endforeach; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 </body>

@@ -1,9 +1,6 @@
-<?php include('../sidebar.php'); ?>
-<?php include('submit_help.php'); ?>
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) session_start();
+include('submit_help.php');
 require_once 'PHPGangsta/GoogleAuthenticator.php';
 
 // ---------------------- Session Timeout -----------------------
@@ -55,112 +52,32 @@ if (isset($_GET['logout_all'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
     
-    .container{
-        margin-left: 260px;
-        width: 100%;
+    .container { width: auto; }
+    header {
+      display: none;
+      background: #0e1a2b;
+      padding: 10px 20px;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 998;
     }
-  
-/* Default: hide header on desktop */
-header {
-  display: none;
-  background-color: #0e1a2b;
-  padding: 10px 20px;
-  align-items: center;
-  justify-content: space-between;
-  color: white;
-}
-
-/* Show header only on phones/tablets */
-@media (max-width: 768px) {
-  header {
-    display: flex;
-  }
-  .container{
-    margin-left: 0px;
-  }
-  .sidebar {
-    display: none;
-  }
-}
-
-.logo-container img.logo {
-  width: 150px;
-  height: auto;
-}
-
-.menu-container .menu-btn {
-  font-size: 28px;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
+    .menu-container .menu-btn { font-size: 28px; background: none; border: none; color: white; cursor: pointer; }
+    @media (max-width: 768px) {
+      .container { margin-left: 0; }
+      header { display: flex; }
+    }
 
 </style>
 </head>
 
 
 <body class="bg-light">
-  <header>
-  <div class="logo-container">
-       <img src="../image/Dollario-logo .svg" alt="" style="height: auto; width: 150px;">
-  </div>
-  <div class="menu-container">
-    <button class="menu-btn" id="menuToggle">☰</button>
-  </div>
-</header>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar'); // or whatever class/id your menu has
-
-    menuBtn.addEventListener('click', function () {
-      sidebar.classList.toggle('active'); // Add or remove class to show/hide menu
-    });
-  });
-</script>
-<style>  /* Hide header by default (for screens larger than 768px) */
-header {
-  display: none;
-}
-
-/* Show header only on phone view (768px and below) */
-@media (max-width: 768px) {
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color:#0e1a2b; /* You can change this */
-    color: white;
-  }
-
-  .logo-container {
-    flex: 1;
-    text-align: left;
-  }
-
-  .menu-container {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .menu-btn {
-    
-    background: none;
-    border: none;
-    color: white;
-    font-size: 30px;
-    cursor: pointer;
-  }
-}
-
-
-
-  </style>
-
-<div class="container ">
+<?php include('../sidebar.php'); ?>
+<?php include('../mobile_header.php'); ?>
+<div class="container">
     
     <h2>🔐 Security Settings</h2>
 
@@ -201,20 +118,11 @@ header {
 <script>
     const toggle = document.getElementById('toggle2FA');
     const setupDiv = document.getElementById('2faSetup');
-
     if (toggle && !toggle.disabled) {
         toggle.addEventListener('change', () => {
             setupDiv.style.display = toggle.checked ? 'block' : 'none';
         });
     }
-</script>
-<script>
-  const menuBtn = document.querySelector('.menu-btn');
-  const sidebar = document.getElementById('sidebar');
-
-  menuBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('show-sidebar');
-  });
 </script>
 
 </body>

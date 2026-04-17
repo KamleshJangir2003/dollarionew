@@ -1,6 +1,5 @@
-<?php include('../sidebar.php'); ?>
-<?php include('submit_help.php'); ?>
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
@@ -105,7 +104,6 @@ $rejectionReason = $rejectionReason ?? '';
 
     .kyc-wrapper {
       max-width: 800px;
-      margin-left: 260px;
       background: #fff;
       border-radius: 16px;
       padding: 40px;
@@ -234,116 +232,14 @@ $rejectionReason = $rejectionReason ?? '';
     }
 
     @media(max-width: 768px) {
-      .upload-section {
-        grid-template-columns: 1fr;
-      }
-
-      .kyc-wrapper {
-        margin-left: 20px;
-        margin-right: 20px;
-      }
+      .upload-section { grid-template-columns: 1fr; }
+      .kyc-wrapper { margin: 10px; padding: 20px; }
     }
-
-    @media (max-width: 768px) {
-  .sidebar {
-    display: none;
-  }
-}
-
-/* Show header only on phone view (768px and below) */
-@media (max-width: 768px) {
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color:#0e1a2b; /* You can change this */
-    color: white;
-  }
-
-  .logo-container {
-    flex: 1;
-    text-align: left;
-  }
-
-  .menu-container {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .menu-btn {
-    display: block;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 30px;
-    cursor: pointer;
-  }
-}
-
   </style>
 </head>
 <body>
-   <header>
-  <div class="logo-container">
-       <img src="../image/Dollario-logo .svg" alt="" style="height: auto; width: 150px;">
-  </div>
-  <div class="menu-container">
-    <button class="menu-btn" id="menuToggle">☰</button>
-  </div>
-</header>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const menuBtn = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar'); // or whatever class/id your menu has
-
-    menuBtn.addEventListener('click', function () {
-      sidebar.classList.toggle('active'); // Add or remove class to show/hide menu
-    });
-  });
-</script>
-<style>  /* Hide header by default (for screens larger than 768px) */
-header {
-  display: none;
-}
-
-/* Show header only on phone view (768px and below) */
-@media (max-width: 768px) {
-  header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color:#0e1a2b; /* You can change this */
-    color: white;
-  }
-
-  .logo-container {
-    flex: 1;
-    text-align: left;
-  }
-
-  .menu-container {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .menu-btn {
-    
-    background: none;
-    border: none;
-    color: white;
-    font-size: 30px;
-    cursor: pointer;
-  }
-}
-
-
-
-  </style>
-      
+  <?php include('../sidebar.php'); ?>
+  <?php include('../mobile_header.php'); ?>
 
   <div class="kyc-wrapper">
     <div class="kyc-header">
@@ -400,16 +296,7 @@ header {
         <li><strong>Is my data secure?</strong> <br>Yes, we use encrypted and secure servers to protect your documents.</li>
       </ul>
     </div>
-  </div> <script>
-   const menuBtn = document.querySelector('.menu-btn');
-const sidebar = document.querySelector('.sidebar');
-
-menuBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('active');
-});
-
-
-  </script>
+  </div>
 
 </body>
 </html>
