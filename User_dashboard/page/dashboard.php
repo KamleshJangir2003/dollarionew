@@ -445,17 +445,17 @@ function calculateTotal() {
 }
 </script>
 
-          <!-- <a href="../page/sdw/sell.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
+          <a href="../page/sdw/sell.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
             <span class="material-icons-round">upload</span>
             Sell Crypto
           </a>
           <a href="../page/sdw/deposit.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
             <span class="material-icons-round">account_balance</span>
             Deposit INR
-          </a> -->
+          </a>
           <a href="../page/sdw/withdraw.php" style="background: var(--background); padding: 16px; border: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none;">
             <span class="material-icons-round">payments</span>
-            Withdraw USDT
+            Withdraw INR
           </a>
         </div>
       </div>

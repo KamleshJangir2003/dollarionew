@@ -1,6 +1,6 @@
 <?php
 session_start();
-$pdo = new PDO("mysql:host=localhost;dbname=u973762102_admin", "root", "");
+$pdo = new PDO("mysql:host=localhost;dbname=u973762102_adming", "u973762102_dollario12", "Dollari@98");
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Replace with session

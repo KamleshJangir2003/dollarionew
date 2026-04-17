@@ -5,9 +5,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // DB Connection
 $host = 'localhost';
-$dbname = 'u973762102_admin';
-$username = 'root';
-$password = '';
+$dbname = 'u973762102_adming';
+$username = 'u973762102_dollario12';
+$password = 'Dollari@98';
 $conn = mysqli_connect($host, $username, $password, $dbname);
 
 if (!$conn) {

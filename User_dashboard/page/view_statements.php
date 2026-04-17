@@ -6,9 +6,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $host = 'localhost';
-$dbname = 'u973762102_admin';
-$username = 'root';
-$password = '';
+$dbname = 'u973762102_adming';
+$username = 'u973762102_dollario12';
+$password = 'Dollari@98';
 $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 

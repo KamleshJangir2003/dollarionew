@@ -7,9 +7,9 @@ if (isset($_SESSION['user_id'], $_SESSION['role']) && $_SESSION['role'] === 'use
 
 // Database connection
 $host = 'localhost';
-$dbname = 'u973762102_admin';
-$username = 'root';
-$password = '';
+$dbname = 'u973762102_adming';
+$username = 'u973762102_dollario12';
+$password = 'Dollari@98';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);

@@ -3,9 +3,9 @@ session_start();  // session start karna zaroori hai
 
 // Database connection (PDO)
 $host = 'localhost';
-$dbname = 'u973762102_admin';
-$username = 'root';
-$password = '';
+$dbname = 'u973762102_adming';
+$username = 'u973762102_dollario12';
+$password = 'Dollari@98';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
