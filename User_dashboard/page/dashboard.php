@@ -56,8 +56,8 @@ $currentPrice = 89.80;
 // Calculate total USDT in INR
 $totalUSDTinINR = $wallet['usdt_balance'] * $currentPrice;
 
-// Total balance including INR + USDT value
-$totalBalance = $wallet['usdt_balance'] * $currentPrice;
+// Total balance = INR balance + USDT value in INR
+$totalBalance = $wallet['inr_balance'] + ($wallet['usdt_balance'] * $currentPrice);
 $priceChange24h = 0; // default value
 
 

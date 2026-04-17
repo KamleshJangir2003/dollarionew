@@ -1,192 +1,211 @@
 <?php
 session_start();
-include '../../config/db.php'; // ✅ Path check kare
+require '../../config/db.php';
+
+// Auto-create tables if missing
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `user_transactions` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `user_id` int(11) NOT NULL,
+        `type` varchar(30) NOT NULL,
+        `amount` decimal(15,2) NOT NULL,
+        `currency` varchar(10) NOT NULL DEFAULT 'INR',
+        `description` text DEFAULT NULL,
+        `status` varchar(20) NOT NULL DEFAULT 'pending',
+        `chain` varchar(50) DEFAULT NULL,
+        `wallet_address` varchar(100) DEFAULT NULL,
+        `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`),
+        KEY `user_id` (`user_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+} catch (PDOException $e) { /* already exists */ }
 
 $userId = $_SESSION['user_id'] ?? 0;
-$message = '';
-
 if (!$userId) {
-    die("User not logged in!");
+    header('Location: ../../auth/login.php');
+    exit;
 }
 
+$message = '';
+$msgType = '';
+
+// Fetch wallet
+$stmt = $pdo->prepare("SELECT * FROM wallets WHERE user_id = ?");
+$stmt->execute([$userId]);
+$wallet = $stmt->fetch(PDO::FETCH_ASSOC);
+$inrBalance = floatval($wallet['inr_balance'] ?? 0);
+
+// Fetch user bank accounts
+$bankStmt = $pdo->prepare("SELECT * FROM bank_accounts WHERE user_id = ?");
+$bankStmt->execute([$userId]);
+$bankAccounts = $bankStmt->fetchAll(PDO::FETCH_ASSOC);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $amount = floatval($_POST['amount']);
-    $walletAddress = htmlspecialchars($_POST['wallet']);
-    $chain = htmlspecialchars($_POST['chain']);
+    $amount  = floatval($_POST['amount']);
+    $method  = htmlspecialchars($_POST['method']);
+    $details = htmlspecialchars(trim($_POST['account_details']));
 
-    // ✅ Check current USDT balance from wallets table
-    $stmt = $pdo->prepare("SELECT usdt_balance FROM wallets WHERE user_id = ?");
-    $stmt->execute([$userId]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    $currentBalance = floatval($result['usdt_balance'] ?? 0);
-
-    if ($amount <= 0) {
-        $message = "<div style='color:red; text-align:center;'>❌ Invalid amount!</div>";
-    } elseif ($amount > $currentBalance) {
-        $message = "<div style='color:red; text-align:center;'>❌ Insufficient USDT balance!</div>";
+    if ($amount < 500) {
+        $message = "Minimum withdrawal amount is ₹500.";
+        $msgType = "error";
+    } elseif ($amount > $inrBalance) {
+        $message = "Insufficient INR balance! Available: ₹" . number_format($inrBalance, 2);
+        $msgType = "error";
+    } elseif (empty($details)) {
+        $message = "Please enter account/UPI details.";
+        $msgType = "error";
     } else {
-        // Deduct USDT
-        $newBalance = $currentBalance - $amount;
-        $stmt = $pdo->prepare("UPDATE wallets SET usdt_balance = ? WHERE user_id = ?");
-        $stmt->execute([$newBalance, $userId]);
+        // Deduct INR balance immediately (hold)
+        $newBalance = $inrBalance - $amount;
+        $pdo->prepare("UPDATE wallets SET inr_balance = ? WHERE user_id = ?")
+            ->execute([$newBalance, $userId]);
 
-        // Insert transaction
-        $stmt = $pdo->prepare("INSERT INTO user_transactions (user_id, type, amount, currency, chain, wallet_address, description, created_at) VALUES (?, 'withdraw', ?, 'USDT', ?, ?, 'USDT Withdrawal', NOW())");
-        $stmt->execute([$userId, $amount, $chain, $walletAddress]);
+        // Insert into inr_withdrawals
+        $pdo->prepare("INSERT INTO inr_withdrawals (user_id, amount, method, account_details, status, requested_at) VALUES (?, ?, ?, ?, 'Pending', NOW())")
+            ->execute([$userId, $amount, $method, $details]);
 
-        // Success message
-        $message = "
-        <div style='
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #e6ffe6;
-            color: #006600;
-            padding: 12px 18px;
-            border-radius: 8px;
-            border: 1px solid #00cc66;
-            font-size: 15px;
-            line-height: 1.5;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            z-index: 9999;
-        '>
-        ✅ <b>USDT Withdrawal of $amount USDT</b> via <b>$chain</b> network has been initiated.<br>
-        ⏳ Your withdrawal will be processed and credited within <b>24 hours</b>.
-        </div>
-        ";
+        // Record in user_transactions
+        $pdo->prepare("INSERT INTO user_transactions (user_id, type, amount, currency, description, status, created_at) VALUES (?, 'withdraw_inr', ?, 'INR', ?, 'pending', NOW())")
+            ->execute([$userId, $amount, "INR Withdrawal via $method — $details"]);
+
+        $message = "Withdrawal request of ₹" . number_format($amount, 2) . " submitted! Will be processed within 24 hours.";
+        $msgType = "success";
+        $inrBalance = $newBalance;
     }
 }
 ?>
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Withdraw USDT</title>
-  <link rel="stylesheet" href="usdt.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Withdraw INR - Dollario</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #f1f3f6;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .withdraw-box {
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { background: #f8fafc; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 30px 20px; }
+    .card {
       background: #fff;
-      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      padding: 36px;
+      width: 100%;
+      max-width: 460px;
+    }
+    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .card-header .icon { background: #fef2f2; color: #dc2626; border-radius: 12px; padding: 10px; display: flex; }
+    .card-header h2 { font-size: 1.3rem; font-weight: 700; color: #1e293b; }
+    .balance-box {
+      background: #f8fafc;
       border-radius: 12px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-      width: 380px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-
-    h2 {
-      text-align: center;
-      color: #222;
-      margin-bottom: 10px;
-    }
-
-    p.subtitle {
-      text-align: center;
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    label {
-      font-weight: 600;
-      display: block;
-      margin-top: 12px;
-      color: #333;
-    }
-
+    .balance-box label { font-size: 0.78rem; color: #64748b; }
+    .balance-box .val { font-size: 1.05rem; font-weight: 700; color: #1e293b; }
+    label { font-size: 0.85rem; font-weight: 600; color: #374151; display: block; margin-bottom: 6px; }
     input, select {
       width: 100%;
-      padding: 9px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
+      padding: 11px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.95rem;
       outline: none;
-      transition: border-color 0.3s;
+      transition: border-color 0.2s;
+      margin-bottom: 16px;
+      background: #fff;
     }
-
-    input:focus, select:focus {
-      border-color: #007bff;
-    }
-
-    button {
+    input:focus, select:focus { border-color: #6366f1; }
+    .btn-withdraw {
       width: 100%;
-      padding: 10px;
-      margin-top: 20px;
-      background-color: #007bff;
+      padding: 13px;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
       cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      transition: background-color 0.3s;
+      transition: opacity 0.2s;
     }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    .note {
-      font-size: 12px;
-      color: #888;
-      margin-top: 8px;
-      text-align: center;
-    }
+    .btn-withdraw:hover { opacity: 0.9; }
+    .btn-back { display: block; text-align: center; margin-top: 14px; color: #6366f1; text-decoration: none; font-size: 0.88rem; }
+    .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.88rem; font-weight: 500; }
+    .alert.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .alert.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .note { font-size: 0.78rem; color: #64748b; margin-top: -10px; margin-bottom: 16px; }
+    .min-note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: #92400e; margin-bottom: 20px; }
   </style>
 </head>
 <body>
-  <?= $message ?> <!-- ✅ Message top me show hoga -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon"><span class="material-icons-round">payments</span></div>
+      <h2>Withdraw INR</h2>
+    </div>
 
-  <div class="withdraw-box">
-    <h2>USDT Withdrawal</h2>
-    <p class="subtitle">Withdraw your USDT securely to your crypto wallet.</p>
+    <?php if ($message): ?>
+      <div class="alert <?= $msgType ?>"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
+
+    <div class="balance-box">
+      <div>
+        <label>Available INR Balance</label>
+        <div class="val">₹<?= number_format($inrBalance, 2) ?></div>
+      </div>
+      <span class="material-icons-round" style="color:#ef4444; font-size:32px;">account_balance_wallet</span>
+    </div>
+
+    <div class="min-note">⚠️ Minimum withdrawal: ₹500 | Processing time: up to 24 hours</div>
 
     <form method="POST">
-      <label>Amount (USDT):</label>
-      <input type="number" name="amount" min="1" step="0.01" placeholder="Enter amount" required>
+      <label>Amount (INR)</label>
+      <input type="number" name="amount" min="500" step="1"
+             max="<?= $inrBalance ?>" placeholder="Minimum ₹500" required>
 
-      <label>Wallet Address:</label>
-      <input type="text" name="wallet" placeholder="Enter your USDT wallet address" required>
-
-      <label>Select Blockchain Network:</label>
-      <select name="chain" required>
-        <option value="">-- Select Network --</option>
-        <option value="TRON (TRC20)">TRON (TRC20)</option>
-        <option value="BNB Smart Chain (BEP20)">BNB Smart Chain (BEP20)</option>
-        <option value="Ethereum (ERC20)">Ethereum (ERC20)</option>
-        <option value="Solana (SOL)">Solana (SOL)</option>
+      <label>Withdrawal Method</label>
+      <select name="method" id="method" required onchange="toggleDetails(this.value)">
+        <option value="">-- Select Method --</option>
+        <option value="UPI">UPI</option>
+        <option value="Bank Transfer">Bank Transfer / NEFT</option>
+        <option value="Paytm">Paytm</option>
+        <option value="PhonePe">PhonePe</option>
       </select>
 
-      <button type="submit">Withdraw Now</button>
+      <div id="details_field">
+        <label id="details_label">UPI ID / Account Details</label>
+        <input type="text" name="account_details" id="account_details"
+               placeholder="Enter UPI ID or bank account number" required>
+        <p class="note">Double-check your details. Withdrawals cannot be reversed.</p>
+      </div>
 
-      <p class="note">⚠️ Please double-check your wallet address. Withdrawals cannot be reversed once initiated.</p>
+      <button type="submit" class="btn-withdraw">
+        <span class="material-icons-round" style="vertical-align:middle; font-size:18px;">send</span>
+        Request Withdrawal
+      </button>
     </form>
+    <a href="../../page/dashboard.php" class="btn-back">← Back to Dashboard</a>
   </div>
 
   <script>
-    // Auto-hide success message after 5 seconds
-    setTimeout(() => {
-      const msg = document.querySelector('div[style*="position: fixed"]');
-      if (msg) msg.style.display = 'none';
-    }, 5000);
+    function toggleDetails(method) {
+      const label = document.getElementById('details_label');
+      const input = document.getElementById('account_details');
+      if (method === 'Bank Transfer') {
+        label.textContent = 'Account Number & IFSC';
+        input.placeholder = 'e.g. 50100123456789 | HDFC0001234';
+      } else if (method === 'UPI' || method === 'Paytm' || method === 'PhonePe') {
+        label.textContent = 'UPI ID / Mobile Number';
+        input.placeholder = 'e.g. name@upi or 9876543210';
+      } else {
+        label.textContent = 'Account Details';
+        input.placeholder = 'Enter your account details';
+      }
+    }
   </script>
 </body>
 </html>

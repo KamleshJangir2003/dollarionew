@@ -1,24 +1,29 @@
 <?php include('../sidebar.php'); ?>
 <?php include('submit_help.php'); ?>
 <?php
-require '../config/db.php'; // or the correct relative path
+require '../config/db.php';
 
-// Pagination logic
+$userId = $_SESSION['user_id'] ?? 0;
+if (!$userId) {
+    header('Location: ../auth/login.php');
+    exit;
+}
+
+// Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $records_per_page = 10;
 $start = ($page - 1) * $records_per_page;
 
-// Fetch total number of records
-$countQuery = "SELECT COUNT(*) FROM user_transactions";
-$countStmt = $pdo->prepare($countQuery);
-$countStmt->execute();
+// Total count for this user only
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM user_transactions WHERE user_id = ?");
+$countStmt->execute([$userId]);
 $totalTransactions = $countStmt->fetchColumn();
 
-// Fetch paginated records
-$query = "SELECT * FROM user_transactions ORDER BY created_at DESC LIMIT :start, :limit";
-$stmt = $pdo->prepare($query);
+// Fetch paginated records for this user only
+$stmt = $pdo->prepare("SELECT * FROM user_transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT :start, :limit");
 $stmt->bindValue(':start', $start, PDO::PARAM_INT);
 $stmt->bindValue(':limit', $records_per_page, PDO::PARAM_INT);
+$stmt->bindValue(1, $userId, PDO::PARAM_INT);
 $stmt->execute();
 $transactions = $stmt->fetchAll();
 ?>
@@ -186,28 +191,42 @@ header {
     <thead>
       <tr>
         <th>ID</th>
-        <th>User ID</th>
         <th>Type</th>
         <th>Amount</th>
+        <th>Currency</th>
+        <th>Description</th>
         <th>Status</th>
-        <th>Created At</th>
+        <th>Date</th>
       </tr>
     </thead>
     <tbody>
       <?php if ($transactions): ?>
-        <?php foreach ($transactions as $row): ?>
+        <?php foreach ($transactions as $row):
+          $typeLabels = [
+            'sell'         => '💱 Sell USDT',
+            'deposit'      => '⬇️ Deposit INR',
+            'withdraw_inr' => '⬆️ Withdraw INR',
+            'withdraw'     => '🔼 Withdraw USDT',
+          ];
+          $typeLabel = $typeLabels[$row['type']] ?? ucfirst($row['type']);
+          $statusColor = $row['status'] === 'completed' ? '#16a34a' : ($row['status'] === 'rejected' ? '#dc2626' : '#d97706');
+          $amtPrefix = in_array($row['type'], ['deposit', 'sell']) ? '+' : '-';
+          $amtColor  = in_array($row['type'], ['deposit', 'sell']) ? '#16a34a' : '#dc2626';
+        ?>
           <tr>
-            <td><?= htmlspecialchars($row['id']) ?></td>
-            <td><?= htmlspecialchars($row['user_id']) ?></td>
-            <td><?= htmlspecialchars($row['type']) ?></td>
-            <td>₹<?= htmlspecialchars(number_format($row['amount'], 2)) ?></td>
-         <td><?= htmlspecialchars($row['status'] ?? 'Pending') ?></td>
-
-            <td><?= htmlspecialchars($row['created_at']) ?></td>
+            <td>#<?= htmlspecialchars($row['id']) ?></td>
+            <td><?= $typeLabel ?></td>
+            <td style="color:<?= $amtColor ?>; font-weight:600;">
+              <?= $amtPrefix ?><?= $row['currency'] === 'INR' ? '₹' : '' ?><?= number_format($row['amount'], 2) ?><?= $row['currency'] === 'USDT' ? ' USDT' : '' ?>
+            </td>
+            <td><?= htmlspecialchars($row['currency']) ?></td>
+            <td style="font-size:13px; color:#64748b;"><?= htmlspecialchars($row['description'] ?? '') ?></td>
+            <td><span style="background:<?= $statusColor ?>20; color:<?= $statusColor ?>; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600;"><?= ucfirst($row['status'] ?? 'pending') ?></span></td>
+            <td><?= date('d M Y, h:i A', strtotime($row['created_at'])) ?></td>
           </tr>
         <?php endforeach; ?>
       <?php else: ?>
-        <tr><td colspan="6" style="text-align:center;">No transactions found.</td></tr>
+        <tr><td colspan="7" style="text-align:center;">No transactions found.</td></tr>
       <?php endif; ?>
     </tbody>
   </table>
