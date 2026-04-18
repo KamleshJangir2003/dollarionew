@@ -459,5 +459,22 @@ setInterval(() => {
 }, 5000);
 </script>
 
+<!-- Help Chat Button -->
+<button id="helpBtn" onclick="toggleHelpPanel()" style="position:fixed;bottom:24px;right:24px;z-index:2000;width:54px;height:54px;border-radius:50%;background:#075e54;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;">
+  <span class="material-icons-round" style="color:#fff;font-size:26px">support_agent</span>
+</button>
+
+<!-- Help Chat Panel -->
+<div id="helpPanel" style="display:none;position:fixed;bottom:90px;right:24px;z-index:1999;width:380px;height:560px;max-width:calc(100vw - 32px);max-height:calc(100vh - 110px);border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.22);">
+  <iframe src="my_help_requests.php?embed=1" style="width:100%;height:100%;border:none;"></iframe>
+</div>
+
+<script>
+function toggleHelpPanel() {
+  var panel = document.getElementById('helpPanel');
+  panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+}
+</script>
+
 </body>
 </html>

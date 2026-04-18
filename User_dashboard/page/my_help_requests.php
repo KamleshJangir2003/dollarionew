@@ -45,6 +45,7 @@ $uname = $uStmt->fetchColumn();
 
     /* Layout */
     .chat-page { margin-left:var(--sidebar); height:100vh; display:flex; flex-direction:column; }
+    .embed .chat-page { margin-left:0; }
 
     /* Header */
     .chat-header {
@@ -171,9 +172,8 @@ $uname = $uStmt->fetchColumn();
     }
   </style>
 </head>
-<body>
-<?php include('../sidebar.php'); ?>
-<?php include('../mobile_header.php'); ?>
+<body<?php if(isset($_GET['embed'])) echo ' class="embed"'; ?>>
+<?php if (!isset($_GET['embed'])): include('../sidebar.php'); include('../mobile_header.php'); endif; ?>
 
 <div class="chat-page">
 
