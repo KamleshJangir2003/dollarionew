@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("INSERT INTO inr_deposits (user_id, amount, method, utr_number, bank_id, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())")
             ->execute([$userId, $amount, $method, $utr, $bankId ?: null]);
 
-        $pdo->prepare("INSERT INTO user_transactions (user_id, type, amount, currency, description, status, created_at) VALUES (?, 'deposit', ?, 'INR', ?, 'pending', NOW())")
+        $pdo->prepare("INSERT INTO user_transactions (user_id, type, amount, currency, description, created_at) VALUES (?, 'deposit', ?, 'INR', ?, NOW())")
             ->execute([$userId, $amount, "INR Deposit via $method — UTR: $utr"]);
 
         $message = "Deposit request of ₹" . number_format($amount, 2) . " submitted! Will be credited after admin approval (within 24 hours).";

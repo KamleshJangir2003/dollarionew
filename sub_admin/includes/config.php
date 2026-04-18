@@ -1,9 +1,8 @@
 <?php
-// config.php
-$host = 'localhost';
-$db   = 'u621774021_dollario';
-$user = 'u621774021_dollario';
-$pass = 'Copy@75970';
+$host    = 'localhost';
+$db      = 'dollario_admin';
+$user    = 'root';
+$pass    = '';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
@@ -18,4 +17,3 @@ try {
 } catch (\PDOException $e) {
     throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
-

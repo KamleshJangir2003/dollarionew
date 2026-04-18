@@ -345,8 +345,11 @@ $priceChange24h = 0;
         <a href="../page/sdw/sell.php" class="action-btn">
           <span class="material-icons-round">upload</span>Sell Crypto
         </a>
+        <a href="../page/sdw/usdt_deposit.php" class="action-btn">
+          <span class="material-icons-round">currency_bitcoin</span>Deposit USDT
+        </a>
         <a href="../page/sdw/deposit.php" class="action-btn">
-          <span class="material-icons-round">account_balance</span>Deposit Crypto
+          <span class="material-icons-round">account_balance</span>Deposit INR
         </a>
         <a href="../page/sdw/withdraw.php" class="action-btn">
           <span class="material-icons-round">payments</span>Withdraw INR

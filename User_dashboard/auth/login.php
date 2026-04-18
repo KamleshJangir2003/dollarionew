@@ -24,6 +24,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             session_start();
             session_regenerate_id(true);
             $_SESSION['user_id'] = $id;
+
+            // Log login history & update ip
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $pdo->prepare("INSERT INTO login_history (user_id, ip_address, user_agent) VALUES (?, ?, ?)")->execute([$id, $ip, $ua]);
+            $pdo->prepare("UPDATE users SET ip_address = ?, last_login = NOW() WHERE id = ?")->execute([$ip, $id]);
+
             header("Location: ../page/dashboard.php");
             exit;
         } else {

@@ -2,723 +2,322 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require '../config/db.php';
 
-// Redirect if not logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
 
-// Get current page from URL
-$currentPage = isset($_GET['page']) ? $_GET['page'] : 'profile';
-
-// Logged-in user ID
 $userId = $_SESSION['user_id'];
 
-// Fetch user profile
-try {
-    $userStmt = $pdo->prepare("SELECT id, username, email, mobile, status, two_fa_enabled, ip_address FROM users WHERE id = ?");
-    $userStmt->execute([$userId]);
-    $user = $userStmt->fetch(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    $user = null;
-}
-if (!$user) {
-    // fallback: try again with fresh query
-    $userStmt2 = $pdo->query("SELECT id, username, email, mobile, status, two_fa_enabled, ip_address FROM users WHERE id = " . intval($userId));
-    $user = $userStmt2 ? $userStmt2->fetch(PDO::FETCH_ASSOC) : null;
-}
+// Fetch user
+$userStmt = $pdo->prepare("SELECT id, username, email, mobile, status, two_fa_enabled, ip_address, created_at FROM users WHERE id = ?");
+$userStmt->execute([$userId]);
+$user = $userStmt->fetch(PDO::FETCH_ASSOC);
+if (!$user) { header('Location: ../auth/login.php'); exit; }
 
-// Wallet balance
+// Last login from login_history
+$llStmt = $pdo->prepare("SELECT ip_address, login_time FROM login_history WHERE user_id = ? ORDER BY login_time DESC LIMIT 1");
+$llStmt->execute([$userId]);
+$lastLogin = $llStmt->fetch(PDO::FETCH_ASSOC);
+
+// Wallet
 $walletStmt = $pdo->prepare("SELECT * FROM wallets WHERE user_id = ?");
 $walletStmt->execute([$userId]);
-$wallet = $walletStmt->fetch(PDO::FETCH_ASSOC);
-if (!$wallet || !is_array($wallet)) {
-    $wallet = ['inr_balance' => 0, 'usdt_balance' => 0];
-}
+$wallet = $walletStmt->fetch(PDO::FETCH_ASSOC) ?: ['inr_balance' => 0, 'usdt_balance' => 0];
 
-
-// KYC status
+// KYC
 $kycStmt = $pdo->prepare("SELECT status FROM kyc_verifications WHERE user_id = ? ORDER BY id DESC LIMIT 1");
 $kycStmt->execute([$userId]);
 $kyc = $kycStmt->fetch(PDO::FETCH_ASSOC) ?: ['status' => 'not_verified'];
-
-// Simulated USDT price
-$currentPrice = 89.80 + (rand(-100, 100) / 100);
 
 // Bank accounts
 $bankStmt = $pdo->prepare("SELECT * FROM bank_accounts WHERE user_id = ? ORDER BY is_primary DESC, added_on DESC");
 $bankStmt->execute([$userId]);
 $bankAccounts = $bankStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Optional: all users (only if admin or needed)
-$usersStmt = $pdo->query("SELECT * FROM users");
-$users = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
+// USDT rate
+$rateRow = $pdo->query("SELECT rate FROM crypto_rates WHERE pair='USDT/INR' LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+$usdtRate = floatval($rateRow['rate'] ?? 89.80);
 
 // Flash messages
-$flash_success = '';
-$flash_error   = '';
+$flash_success = $flash_error = '';
 if (isset($_GET['success'])) {
     if ($_GET['success'] === 'profile_updated')  $flash_success = 'Profile updated successfully!';
     if ($_GET['success'] === 'password_changed') $flash_success = 'Password changed successfully!';
 }
 if (isset($_GET['error'])) {
-    if ($_GET['error'] === 'update_failed')       $flash_error = 'Failed to update. Please try again.';
-    if ($_GET['error'] === 'incorrect_password')  $flash_error = 'Current password is incorrect.';
-    if ($_GET['error'] === 'password_mismatch')   $flash_error = 'New passwords do not match.';
+    if ($_GET['error'] === 'update_failed')      $flash_error = 'Failed to update. Please try again.';
+    if ($_GET['error'] === 'incorrect_password') $flash_error = 'Current password is incorrect.';
+    if ($_GET['error'] === 'password_mismatch')  $flash_error = 'New passwords do not match.';
 }
 
-
-// Now you can include this file in profile page and use:
-// $user['username'], $wallet['inr_balance'], $kyc['status'], etc.
+$kycColor = ['verified' => '#22c55e', 'pending' => '#f59e0b', 'not_verified' => '#ef4444'];
+$kycIcon  = ['verified' => 'check_circle', 'pending' => 'pending', 'not_verified' => 'warning'];
+$kycLabel = ['verified' => 'Identity Verified', 'pending' => 'Verification Pending', 'not_verified' => 'Not Verified'];
+$kycSub   = ['verified' => 'Your account is fully verified', 'pending' => 'Under review by our team', 'not_verified' => 'Complete KYC for full access'];
+$ks = $kyc['status'];
 ?>
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DollaRio Pro - My Profile</title>
+  <title>My Profile - Dollario</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <style>
     :root {
-      --primary: #6366f1;
-      --secondary: #4f46e5;
-      --background: #f8fafc;
-      --surface: #ffffff;
-      --text-primary: #1e293b;
-      --text-secondary: #64748b;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --danger: #ef4444;
+      --primary: #6366f1; --secondary: #4f46e5;
+      --bg: #f1f5f9; --surface: #fff;
+      --text: #1e293b; --muted: #64748b;
+      --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+      --radius: 14px; --shadow: 0 2px 12px rgba(0,0,0,0.07);
     }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+    body { background:var(--bg); min-height:100vh; }
+    .page-wrap { margin-left:250px; padding:24px; }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
+    /* Alert */
+    .alert { padding:12px 16px; border-radius:10px; margin-bottom:18px; font-size:0.88rem; font-weight:500; display:flex; align-items:center; gap:8px; }
+    .alert.success { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+    .alert.error   { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
 
-    body {
-      background: var(--background);
-      min-height: 100vh;
-      display: flex;
-      -webkit-font-smoothing: antialiased;
-    }
+    /* Profile Header Card */
+    .profile-hero { background:linear-gradient(135deg,var(--primary),var(--secondary)); border-radius:var(--radius); padding:28px 32px; color:#fff; display:flex; align-items:center; gap:24px; margin-bottom:20px; box-shadow:var(--shadow); }
+    .avatar { width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:2.2rem; flex-shrink:0; }
+    .profile-hero h2 { font-size:1.4rem; font-weight:700; }
+    .profile-hero p  { font-size:0.85rem; opacity:0.85; margin-top:4px; }
+    .hero-badge { background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px; font-size:0.78rem; font-weight:600; display:inline-block; margin-top:8px; }
 
-    /* ======== Main Content ======== */
-    .main-content {
-      flex: 1;
-      display: grid;
-      padding: 20px;
-      min-width: 0;
-    }
+    /* Grid */
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .grid-1 { display:grid; grid-template-columns:1fr; gap:20px; }
 
-    /* ======== Page Header ======== */
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
+    /* Card */
+    .card { background:var(--surface); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); }
+    .card-title { font-size:0.95rem; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid #f1f5f9; }
+    .card-title .material-icons-round { font-size:18px; color:var(--primary); }
 
-    .page-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    /* Info rows */
+    .info-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f8fafc; font-size:0.88rem; }
+    .info-row:last-child { border-bottom:none; }
+    .info-row .lbl { color:var(--muted); }
+    .info-row .val { font-weight:600; color:var(--text); }
 
-    /* ======== Profile Card ======== */
-    .profile-card {
-      background: var(--surface);
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-      overflow: hidden;
-    }
+    /* KYC box */
+    .kyc-box { display:flex; align-items:center; gap:12px; padding:14px; border-radius:10px; margin-bottom:16px; }
 
-    .profile-header {
-      padding: 24px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
+    /* Wallet items */
+    .wallet-item { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--bg); border-radius:10px; margin-bottom:8px; }
+    .wallet-item .w-label { font-size:0.82rem; color:var(--muted); }
+    .wallet-item .w-val   { font-size:1rem; font-weight:700; color:var(--text); }
 
-    .profile-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-    }
+    /* Buttons */
+    .btn { padding:9px 16px; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; border:none; transition:all 0.2s; text-decoration:none; }
+    .btn-primary { background:var(--primary); color:#fff; }
+    .btn-primary:hover { background:var(--secondary); }
+    .btn-outline { background:transparent; border:1.5px solid var(--primary); color:var(--primary); }
+    .btn-outline:hover { background:#eef2ff; }
+    .btn-sm { padding:6px 12px; font-size:0.78rem; }
+    .btn-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
 
-    .profile-info h2 {
-      font-size: 1.5rem;
-      margin-bottom: 4px;
-    }
+    /* Forms */
+    .form-box { display:none; margin-top:18px; padding:20px; background:var(--bg); border-radius:12px; animation:fadeIn 0.3s; }
+    .form-box.open { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .form-box label { font-size:0.82rem; font-weight:600; color:var(--text); display:block; margin-bottom:5px; }
+    .form-box input { width:100%; padding:10px 13px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.9rem; margin-bottom:12px; outline:none; background:#fff; }
+    .form-box input:focus { border-color:var(--primary); }
+    .form-box .btn-primary { width:100%; justify-content:center; padding:11px; }
 
-    .profile-info p {
-      opacity: 0.9;
-      font-size: 0.9rem;
-    }
+    /* Bank card */
+    .bank-card { background:var(--bg); border-radius:10px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+    .bank-card .bank-name { font-weight:600; font-size:0.9rem; color:var(--text); }
+    .bank-card .bank-num  { font-size:0.8rem; color:var(--muted); margin-top:2px; }
+    .primary-badge { background:#dcfce7; color:#166534; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:20px; }
 
-    .profile-body {
-      padding: 24px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
+    /* Status badge */
+    .status-active   { color:var(--green); font-weight:600; }
+    .status-pending  { color:var(--yellow); font-weight:600; }
+    .status-inactive { color:var(--red); font-weight:600; }
 
-    /* ======== Info Sections ======== */
-    .info-section {
-      margin-bottom: 24px;
-    }
-
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #f1f5f9;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 12px;
-    }
-
-    .info-item {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .info-label {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    .info-value {
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    /* ======== KYC Status ======== */
-    .kyc-status {
-      padding: 12px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .kyc-verified {
-      background: rgba(34, 197, 94, 0.1);
-      color: var(--success);
-    }
-
-    .kyc-pending {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--warning);
-    }
-
-    .kyc-not-verified {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-    }
-
-    /* ======== Wallet Summary ======== */
-    .wallet-summary {
-      background: var(--background);
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 12px;
-    }
-
-    .wallet-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .wallet-item:last-child {
-      border-bottom: none;
-    }
-
-    /* ======== Action Buttons ======== */
-    .action-buttons {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    .btn {
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-      border: none;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--secondary);
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--primary);
-      color: var(--primary);
-    }
-
-    .btn-outline:hover {
-      background: rgba(99, 102, 241, 0.1);
-    }
-
-    /* ======== Responsive Styles ======== */
-    @media (max-width: 1024px) {
-      .profile-body {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .main-content { margin-left: 0; padding: 12px; }
-      .profile-header { flex-direction: column; text-align: center; }
-      .action-buttons { flex-direction: column; }
-    }
-    @media (max-width: 480px) {
-      .info-grid { grid-template-columns: 1fr; gap: 8px; }
-    }
-
+    @media(max-width:900px) { .grid-2 { grid-template-columns:1fr; } }
+    @media(max-width:768px) { .page-wrap { margin-left:0; padding:12px; } .profile-hero { flex-direction:column; text-align:center; } }
   </style>
 </head>
 <body>
-  <?php include('../sidebar.php'); ?>
-  <main class="main-content">
-    <?php include('../mobile_header.php'); ?>
-    <div class="page-header">
-      <h1 class="page-title">
-        <span class="material-icons-round">person</span>
-        My Profile
-      </h1>
-      <div>
-        <button onclick="window.print()" style="background: var(--background); padding: 8px 16px; border-radius: 8px; border: none; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-          <span class="material-icons-round">print</span>
-          Print Profile
-        </button>
+<?php include('../sidebar.php'); ?>
+<?php include('../mobile_header.php'); ?>
+
+<div class="page-wrap">
+
+  <?php if ($flash_success): ?>
+    <div class="alert success"><span class="material-icons-round" style="font-size:18px">check_circle</span><?= htmlspecialchars($flash_success) ?></div>
+  <?php endif; ?>
+  <?php if ($flash_error): ?>
+    <div class="alert error"><span class="material-icons-round" style="font-size:18px">error</span><?= htmlspecialchars($flash_error) ?></div>
+  <?php endif; ?>
+
+  <!-- Hero -->
+  <div class="profile-hero">
+    <div class="avatar"><span class="material-icons-round">person</span></div>
+    <div>
+      <h2><?= htmlspecialchars($user['username'] ?? 'User') ?></h2>
+      <p><?= htmlspecialchars($user['email'] ?? '') ?></p>
+      <span class="hero-badge">Member since <?= !empty($user['created_at']) ? date('M Y', strtotime($user['created_at'])) : 'N/A' ?></span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- Personal Info + Edit -->
+    <div class="card">
+      <div class="card-title"><span class="material-icons-round">badge</span> Personal Information</div>
+      <div class="info-row"><span class="lbl">Username</span><span class="val"><?= htmlspecialchars($user['username'] ?? 'N/A') ?></span></div>
+      <div class="info-row"><span class="lbl">Email</span><span class="val"><?= htmlspecialchars($user['email'] ?? 'N/A') ?></span></div>
+      <div class="info-row"><span class="lbl">Mobile</span><span class="val"><?= htmlspecialchars($user['mobile'] ?? 'N/A') ?></span></div>
+      <div class="info-row"><span class="lbl">Account Status</span>
+        <span class="val status-<?= $user['status'] ?? 'pending' ?>"><?= ucfirst($user['status'] ?? 'pending') ?></span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="toggleForm('edit-form')"><span class="material-icons-round">edit</span> Edit Profile</button>
+        <button class="btn btn-outline" onclick="toggleForm('pass-form')"><span class="material-icons-round">lock</span> Change Password</button>
+      </div>
+
+      <!-- Edit Profile Form -->
+      <div class="form-box" id="edit-form">
+        <form action="../includes/edit_profile.php" method="POST">
+          <label>Username</label>
+          <input type="text" name="name" value="<?= htmlspecialchars($user['username'] ?? '') ?>" required>
+          <label>Email</label>
+          <input type="email" name="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" required>
+          <label>Mobile</label>
+          <input type="text" name="phone" value="<?= htmlspecialchars($user['mobile'] ?? '') ?>" required>
+          <button type="submit" class="btn btn-primary"><span class="material-icons-round">save</span> Save Changes</button>
+        </form>
+      </div>
+
+      <!-- Change Password Form -->
+      <div class="form-box" id="pass-form">
+        <form action="../includes/change_password.php" method="POST">
+          <label>Current Password</label>
+          <input type="password" name="old_password" placeholder="Enter current password" required>
+          <label>New Password</label>
+          <input type="password" name="new_password" placeholder="Enter new password" required>
+          <label>Confirm New Password</label>
+          <input type="password" name="confirm_password" placeholder="Confirm new password" required>
+          <button type="submit" class="btn btn-primary"><span class="material-icons-round">lock_reset</span> Update Password</button>
+        </form>
       </div>
     </div>
 
-    <!-- Flash Messages -->
-    <?php if ($flash_success): ?>
-      <div style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-        <span class="material-icons-round" style="font-size:18px;">check_circle</span><?php echo $flash_success; ?>
+    <!-- Wallet Summary -->
+    <div class="card">
+      <div class="card-title"><span class="material-icons-round">account_balance_wallet</span> Wallet Summary</div>
+      <div class="wallet-item">
+        <div><div class="w-label">USDT Balance</div><div class="w-val"><?= number_format($wallet['usdt_balance'], 4) ?> USDT</div></div>
+        <span class="material-icons-round" style="color:#ca8a04">toll</span>
       </div>
-    <?php endif; ?>
-    <?php if ($flash_error): ?>
-      <div style="background:#fef2f2;color:#991b1b;border:1px solid #fecaca;padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-        <span class="material-icons-round" style="font-size:18px;">error</span><?php echo $flash_error; ?>
+      <div class="wallet-item">
+        <div><div class="w-label">INR Balance</div><div class="w-val">₹<?= number_format($wallet['inr_balance'], 2) ?></div></div>
+        <span class="material-icons-round" style="color:#22c55e">currency_rupee</span>
       </div>
-    <?php endif; ?>
-
-    <!-- Profile Card -->
-    <div class="profile-card">
-      <div class="profile-header">
-        <div class="profile-avatar">
-          <span class="material-icons-round">person</span>
-        </div>
-        <div class="profile-info">
-          <h2><?php echo htmlspecialchars($user['username'] ?? 'Not set'); ?></h2>
-          <p>Member since <?php echo !empty($user['created_at']) ? date('M Y', strtotime($user['created_at'])) : 'N/A'; ?></p>
-        </div>
+      <div class="wallet-item">
+        <div><div class="w-label">Total Value (INR)</div><div class="w-val">₹<?= number_format($wallet['inr_balance'] + ($wallet['usdt_balance'] * $usdtRate), 2) ?></div></div>
+        <span class="material-icons-round" style="color:var(--primary)">account_balance</span>
       </div>
-
-      <div class="profile-body">
-        <!-- Personal Information -->
-       
-  <div class="info-section">
-    <h3 class="section-title">
-      <span class="material-icons-round">badge</span>
-      Personal Information
-    </h3>
-
-    <div class="info-grid">
-      <div class="info-item">
-        <span class="info-label">Full Name</span>
-        <span class="info-value"><?php echo htmlspecialchars($user['username'] ?? 'Not set'); ?></span>
-      </div>
-
-      <div class="info-item">
-        <span class="info-label">Email</span>
-        <span class="info-value"><?php echo htmlspecialchars($user['email'] ?? 'Not set'); ?></span>
-      </div>
-
-      <div class="info-item">
-        <span class="info-label">Phone</span>
-        <span class="info-value"><?php echo htmlspecialchars($user['mobile'] ?? 'Not set'); ?></span>
-      </div>
-
-      <div class="info-item">
-        <span class="info-label">Date of Birth</span>
-        <span class="info-value">Not set</span>
+      <div class="btn-row">
+        <a href="sdw/deposit.php" class="btn btn-outline btn-sm"><span class="material-icons-round">add</span> Deposit INR</a>
+        <a href="sdw/usdt_deposit.php" class="btn btn-outline btn-sm"><span class="material-icons-round">currency_bitcoin</span> Deposit USDT</a>
+        <a href="sdw/withdraw.php" class="btn btn-outline btn-sm"><span class="material-icons-round">payments</span> Withdraw</a>
       </div>
     </div>
-    <!---- Guest Personal Information -->
 
-   <style>
-  .form-section {
-    display: none;
-    margin-top: 20px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    background-color: #fff;
-    animation: fadeIn 0.4s ease-in-out;
-  }
+    <!-- KYC Verification -->
+    <div class="card">
+      <div class="card-title"><span class="material-icons-round">verified_user</span> KYC Verification</div>
+      <div class="kyc-box" style="background:<?= $kycColor[$ks] ?>18; color:<?= $kycColor[$ks] ?>">
+        <span class="material-icons-round" style="font-size:28px"><?= $kycIcon[$ks] ?></span>
+        <div>
+          <div style="font-weight:700"><?= $kycLabel[$ks] ?></div>
+          <div style="font-size:0.82rem;margin-top:2px"><?= $kycSub[$ks] ?></div>
+        </div>
+      </div>
+      <?php if ($ks !== 'verified'): ?>
+        <a href="kyc.php" class="btn btn-primary"><span class="material-icons-round">verified</span> Complete KYC</a>
+      <?php endif; ?>
+    </div>
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+    <!-- Security -->
+    <div class="card">
+      <div class="card-title"><span class="material-icons-round">security</span> Security Settings</div>
+      <div class="info-row">
+        <span class="lbl">2FA Authentication</span>
+        <span class="val" style="color:<?= !empty($user['two_fa_enabled']) ? 'var(--green)' : 'var(--muted)' ?>">
+          <?= !empty($user['two_fa_enabled']) ? '✔ Enabled' : 'Not Enabled' ?>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="lbl">Last Login</span>
+        <span class="val"><?= !empty($lastLogin['login_time']) ? date('d M Y, h:i A', strtotime($lastLogin['login_time'])) : 'N/A' ?></span>
+      </div>
+      <div class="info-row">
+        <span class="lbl">IP Address</span>
+        <span class="val"><?= htmlspecialchars($lastLogin['ip_address'] ?? $user['ip_address'] ?? $_SERVER['REMOTE_ADDR']) ?></span>
+      </div>
+      <div class="btn-row">
+        <a href="security.php" class="btn btn-outline btn-sm"><span class="material-icons-round">admin_panel_settings</span> Security Settings</a>
+      </div>
+    </div>
 
-  .form-section h3 {
-    margin-bottom: 15px;
-    font-size: 22px;
-    font-weight: 600;
-    color: #333;
-  }
+    <!-- Bank Accounts - full width -->
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-title"><span class="material-icons-round">account_balance</span> Bank Accounts</div>
+      <?php if ($bankAccounts): ?>
+        <?php foreach ($bankAccounts as $bank): ?>
+          <div class="bank-card">
+            <div>
+              <div class="bank-name"><?= htmlspecialchars($bank['bank_name']) ?></div>
+              <div class="bank-num"><?= str_repeat('X', max(0, strlen($bank['account_number']) - 4)) . substr($bank['account_number'], -4) ?></div>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">Added <?= date('d M Y', strtotime($bank['added_on'])) ?></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <?php if ($bank['is_primary']): ?>
+                <span class="primary-badge">✔ Primary</span>
+              <?php else: ?>
+                <form method="POST" action="../bank_details/set_primary_account.php">
+                  <input type="hidden" name="bank_id" value="<?= $bank['id'] ?>">
+                  <button class="btn btn-outline btn-sm" type="submit">Set Primary</button>
+                </form>
+              <?php endif; ?>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p style="color:var(--muted);font-size:0.88rem">No bank accounts added yet.</p>
+      <?php endif; ?>
+      <div class="btn-row">
+        <a href="../bank_details/add_bank_account.php" class="btn btn-primary btn-sm"><span class="material-icons-round">add</span> Add Bank Account</a>
+      </div>
+    </div>
 
-  .form-section form input {
-    width: 100%;
-    padding: 10px 15px;
-    margin-bottom: 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 15px;
-  }
-
-  .form-section form button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-  }
-
-  .form-section form button:hover {
-    background-color: #0056b3;
-  }
-
-  .action-buttons {
-    margin-top: 20px;
-    display: flex;
-    gap: 15px;
-  }
-
-  .btn.btn-outline {
-    border: 1px solid #007bff;
-    background-color: transparent;
-    color: #007bff;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 15px;
-  }
-
-  .btn.btn-outline:hover {
-    background-color: #007bff;
-    color: #fff;
-  }
-</style>
-
-<div class="action-buttons">
-  <button class="btn btn-outline" onclick="showSection('edit-profile')">
-    <span class="material-icons-round">edit</span>
-    Edit Profile
-  </button>
-  <button class="btn btn-outline" onclick="showSection('change-password')">
-    <span class="material-icons-round">lock</span>
-    Change Password
-  </button>
-</div>
-
-<!-- Edit Profile Section -->
-<div id="edit-profile" class="form-section">
-  <h3>Edit Profile</h3>
- <form action="../includes/edit_profile.php" method="POST">
-  <input type="text" name="name" placeholder="Full Name" value="<?php echo htmlspecialchars($user['username'] ?? ''); ?>" required>
-  <input type="email" name="email" placeholder="Email Address" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>" required>
-  <input type="text" name="phone" placeholder="Phone Number" value="<?php echo htmlspecialchars($user['mobile'] ?? ''); ?>" required>
-  <button type="submit">Save Changes</button>
-</form>
-
-
-</div>
-
-<!-- Change Password Section -->
-<div id="change-password" class="form-section">
-  <h3>Change Password</h3>
- <form action="../includes/change_password.php" method="POST">
-  <input type="password" name="old_password" placeholder="Old Password" required>
-  <input type="password" name="new_password" placeholder="New Password" required>
-  <input type="password" name="confirm_password" placeholder="Confirm New Password" required>
-  <button type="submit">Update Password</button>
-</form>
-
-
+  </div>
 </div>
 
 <script>
-  function showSection(sectionId) {
-    // Hide all sections first
-    document.querySelectorAll('.form-section').forEach(el => {
-      el.style.display = 'none';
-    });
-
-    // Show the selected section with animation
-    const section = document.getElementById(sectionId);
-    if (section) {
-      section.style.display = 'block';
-    }
-  }
-
-  // Optionally show nothing by default
-  showSection(null); 
+function toggleForm(id) {
+  document.querySelectorAll('.form-box').forEach(f => {
+    if (f.id === id) f.classList.toggle('open');
+    else f.classList.remove('open');
+  });
+}
+<?php if (isset($_GET['success']) || isset($_GET['error'])): ?>
+// Auto-open edit form on error
+<?php if (isset($_GET['error']) && in_array($_GET['error'], ['update_failed','incorrect_password','password_mismatch'])): ?>
+toggleForm('<?= $_GET['error'] === "password_mismatch" || $_GET['error'] === "incorrect_password" ? "pass-form" : "edit-form" ?>');
+<?php endif; ?>
+<?php endif; ?>
 </script>
-
-
-  </div>
-
-
-
-        <!-- Account Details -->
-        <div class="info-section">
-          <h3 class="section-title">
-            <span class="material-icons-round">verified_user</span>
-            Account Verification
-          </h3>
-          
-          <?php if ($kyc['status'] === 'verified'): ?>
-            <div class="kyc-status kyc-verified">
-              <span class="material-icons-round">check_circle</span>
-              <div>
-                <strong>Identity Verified</strong>
-                <div style="font-size: 0.9rem;">
-                  Verified on <?php echo date('d M Y', strtotime($kyc['verified_at'])); ?>
-                </div>
-              </div>
-            </div>
-          <?php elseif ($kyc['status'] === 'pending'): ?>
-            <div class="kyc-status kyc-pending">
-              <span class="material-icons-round">pending</span>
-              <div>
-                <strong>Verification Pending</strong>
-                <div style="font-size: 0.9rem;">
-                  Under review by our team
-                </div>
-              </div>
-            </div>
-          <?php else: ?>
-            <div class="kyc-status kyc-not-verified">
-              <span class="material-icons-round">warning</span>
-              <div>
-                <strong>Not Verified</strong>
-                <div style="font-size: 0.9rem;">
-                  Complete KYC for full access
-                </div>
-              </div>
-            </div>
-          <?php endif; ?>
-          
-          <h3 class="section-title" style="margin-top: 24px;">
-            <span class="material-icons-round">account_balance_wallet</span>
-            Wallet Summary
-          </h3>
-          
-          <div class="wallet-summary">
-  <div class="wallet-item">
-    <span>USDT Balance</span>
-    <strong><?php echo number_format($wallet['usdt_balance'], 4); ?> USDT</strong>
-  </div>
-  <div class="wallet-item">
-    <span>INR Balance</span>
-    <strong>₹<?php echo number_format($wallet['inr_balance'], 2); ?></strong>
-  </div>
-  <div class="wallet-item">
-    <span>Total Value</span>
-    
-    <strong>₹<?php echo number_format($wallet['inr_balance'] + ($wallet['usdt_balance'] * $currentPrice), 2); ?></strong>
-  </div>
-</div>
-
-          
-          <div class="action-buttons">
-          <?php if ($kyc['status'] !== 'verified'): ?>
-  <a href="kyc.php" class="btn btn-primary">
-    <span class="material-icons-round">verified</span>
-    Complete KYC
-  </a>
-<?php endif; ?>
-     <?php
-// Fetching bank accounts from DB
-$bankStmt = $pdo->prepare("SELECT * FROM bank_accounts WHERE user_id = ? ORDER BY is_primary DESC, added_on DESC");
-$bankStmt->execute([$userId]);
-$bankAccounts = $bankStmt->fetchAll(PDO::FETCH_ASSOC);
-?>
-
-<!-- Loop through each bank account -->
-<?php if ($bankAccounts): ?>
-  <?php foreach ($bankAccounts as $bank): ?>
-    <div>
-      <strong><?= htmlspecialchars($bank['bank_name']) ?></strong>
-
-      <!-- ✅ View Statements Button (safe inside the loop) -->
-      <a href="/Dollario/User_dashboard/page/view_statements.php?bank_id=<?= htmlspecialchars($bank['id']) ?>" class="btn btn-outline">
-        <span class="material-icons-round">receipt</span>
-        View Statements
-      </a>
-    </div>
-  <?php endforeach; ?>
-<?php else: ?>
-  <p>No bank accounts found.</p>
-<?php endif; ?>
-
-
-
-          </div>
-        </div>
-
-        <!-- Security Settings -->
-      <div class="info-section">
-  <h3 class="section-title">
-    <span class="material-icons-round">security</span>
-    Security Settings
-  </h3>
-
-  <div class="info-grid">
-    <div class="info-item">
-      <span class="info-label">2FA Authentication</span>
-      <span class="info-value">
-      <?php echo ($user['two_fa_enabled'] ?? 0) ? 'Enabled' : 'Not enabled'; ?>
-
-      </span>
-    </div>
-
-    <div class="info-item">
-      <span class="info-label">Last Login</span>
-      <span class="info-value">
-        <?php echo !empty($user['last_login']) ? date('d M Y, h:i A', strtotime($user['last_login'])) : 'N/A'; ?>
-        <span style="color: var(--text-secondary); font-size: 0.8rem;">
-          (<?php echo htmlspecialchars($user['ip_address'] ?? $_SERVER['REMOTE_ADDR']); ?>)
-        </span>
-      </span>
-    </div>
-
-    <div class="info-item">
-  <span class="info-label">Account Status</span>
-  <span class="info-value" style="color: <?php echo (isset($user['status']) && $user['status'] === 'active') ? 'var(--success)' : 'red'; ?>">
-    <?php echo isset($user['status']) ? ucfirst($user['status']) : ucfirst($kyc['status']); ?>
-  </span>
-</div>
-
-  </div>
-
-  <div class="action-buttons">
-    <button class="btn btn-outline">
-      <span class="material-icons-round">admin_panel_settings</span>
-          <?php echo ($user['two_fa_enabled'] ?? 0) ? 'Enabled' : 'Not enabled'; ?>
-    </button>
-
-    <button class="btn btn-outline">
-      <span class="material-icons-round">devices</span>
-      Manage Devices
-    </button>
-  </div>
-</div>
-
-
-        <!-- Bank Accounts -->
-        <div class="info-section">
-  <h3 class="section-title">
-    <span class="material-icons-round">account_balance</span>
-    Bank Accounts
-  </h3>
-
-  <?php if ($bankAccounts): ?>
-    <?php foreach ($bankAccounts as $bank): ?>
-      <div style="background: var(--background); padding: 16px; border-radius: 12px; margin-bottom: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div>
-            <strong><?= htmlspecialchars($bank['bank_name']) ?></strong>
-            <div style="color: var(--text-secondary); font-size: 0.9rem;">
-              <?= str_repeat('X', strlen($bank['account_number']) - 4) . substr($bank['account_number'], -4) ?>
-            </div>
-          </div>
-          <?php if ($bank['is_primary']): ?>
-            <span class="material-icons-round" style="color: var(--success);">check_circle</span>
-          <?php endif; ?>
-        </div>
-
-        <div style="font-size: 0.9rem; color: var(--text-secondary);">
-          <div><?= $bank['is_primary'] ? 'Primary account for deposits & withdrawals' : '' ?></div>
-          <div>Added on <?= date('d M Y', strtotime($bank['added_on'])) ?></div>
-        </div>
-
-        <div class="action-buttons" style="margin-top: 10px;">
-          <?php if (!$bank['is_primary']): ?>
-           <form method="post" action="set_primary_account.php">
-  <input type="hidden" name="bank_id" value="<?= $bank['id'] ?>">
-  <button class="btn btn-outline" type="submit">Set as Primary</button>
-</form>
-
-          <?php endif; ?>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  <?php else: ?>
-    <p style="color: var(--text-secondary);">No bank accounts added yet.</p>
-  <?php endif; ?>
-
-  <div class="action-buttons">
-    <a href="../bank_details/add_bank_account.php" class="btn btn-outline">
-      <span class="material-icons-round">add</span>
-      Add Bank Account
-    </a>
-  </div>
-</div>
-      </div>
-    </div>
-  </main>
 </body>
 </html>

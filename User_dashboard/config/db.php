@@ -1,8 +1,8 @@
 <?php
 $host     = 'localhost';
-$dbname   = 'u621774021_dollario';
-$username = 'u621774021_dollario';
-$password = 'Copy@75970';
+$dbname   = 'dollario_admin';
+$username = 'root';
+$password = '';
 
 // PDO connection
 try {
