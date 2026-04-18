@@ -9,13 +9,11 @@ include('../templates/header.php');
 //$password = "";
 //$dbname = "dollario_admin";//
 $host = 'localhost';
-$dbname = 'u973762102_adming';
-$username = 'u973762102_dollario12';
-$password = 'Dollari@98';
-// Fix: use consistent connection variable name
+$dbname = 'u621774021_dollario';
+$username = 'u621774021_dollario';
+$password = 'Copy@75970';
 $conn = new mysqli($host, $username, $password, $dbname);
 
-// Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
@@ -26,11 +24,6 @@ $conditions = [];
 if (!empty($_GET['status'])) {
     $status = $conn->real_escape_string($_GET['status']);
     $conditions[] = "status = '$status'";
-}
-
-if (!empty($_GET['user_type'])) {
-    $userType = $conn->real_escape_string($_GET['user_type']);
-    $conditions[] = "user_type = '$userType'";
 }
 
 if (!empty($_GET['registration_date'])) {
@@ -45,23 +38,6 @@ if (!empty($_GET['registration_date'])) {
 }
 
 $whereClause = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions) : '';
-
-// Example of correct query, assuming you meant 'username' instead of 'name'
-// Corrected query, adjust according to actual column names
-$sql = "SELECT id, username, email FROM admin_users"; // Make sure to adjust this based on your actual schema
-
-// Fetch result
-$result = $conn->query($sql);
-
-// Loop through results
-while ($user = $result->fetch_assoc()) {
-    // Access the correct column names, e.g., 'username' instead of 'name'
-    $userName = $user['username'];  // Correct column name
-    $email = $user['email'];
-
-    // Use these variables as needed in your code
-    //echo "User: $userName, Email: $email <br>";
-}
 
 
 ?>
@@ -282,14 +258,8 @@ while ($user = $result->fetch_assoc()) {
                             <label for="userStatusFilter">Status</label>
                             <select id="userStatusFilter" name="status" class="form-control">
                                 <option value="">All Statuses</option>
-                                <option value="verified" <?= ($_GET['status'] ?? '') == 'verified' ? 'selected' : '' ?>>
-                                    Verified</option>
-                                <option value="pending" <?= ($_GET['status'] ?? '') == 'pending' ? 'selected' : '' ?>>
-                                    Pending KYC</option>
-                                <option value="rejected" <?= ($_GET['status'] ?? '') == 'rejected' ? 'selected' : '' ?>>KYC
-                                    Rejected</option>
-                                <option value="suspended" <?= ($_GET['status'] ?? '') == 'suspended' ? 'selected' : '' ?>>
-                                    Suspended</option>
+                                <option value="active" <?= ($_GET['status'] ?? '') == 'active' ? 'selected' : '' ?>>Active</option>
+                                <option value="pending" <?= ($_GET['status'] ?? '') == 'pending' ? 'selected' : '' ?>>Pending</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -300,18 +270,6 @@ while ($user = $result->fetch_assoc()) {
                                 <option value="week" <?= ($_GET['registration_date'] ?? '') == 'week' ? 'selected' : '' ?>>
                                     This Week</option>
                                 <option value="month" <?= ($_GET['registration_date'] ?? '') == 'month' ? 'selected' : '' ?>>This Month</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="userTypeFilter">User Type</label>
-                            <select id="userTypeFilter" name="user_type" class="form-control">
-                                <option value="">All Types</option>
-                                <option value="investor" <?= ($_GET['user_type'] ?? '') == 'investor' ? 'selected' : '' ?>>
-                                    Investor</option>
-                                <option value="trader" <?= ($_GET['user_type'] ?? '') == 'trader' ? 'selected' : '' ?>>
-                                    Trader</option>
-                                <option value="agent" <?= ($_GET['user_type'] ?? '') == 'agent' ? 'selected' : '' ?>>Agent
-                                </option>
                             </select>
                         </div>
                     </div>
@@ -341,10 +299,6 @@ while ($user = $result->fetch_assoc()) {
             $labels = ['today' => 'Today', 'week' => 'This Week', 'month' => 'This Month'];
             $activeFilters[] = "Registration Date: " . ($labels[$_GET['registration_date']] ?? $_GET['registration_date']);
         }
-        if (!empty($_GET['user_type'])) {
-            $activeFilters[] = "User Type: " . ucfirst($_GET['user_type']);
-        }
-
         if (count($activeFilters) > 0): ?>
             <div style="margin-bottom: 20px; font-size: 16px; color: #333;">
                 <strong>Filters Applied:</strong> <?= implode(' | ', $activeFilters); ?>
@@ -390,58 +344,37 @@ while ($user = $result->fetch_assoc()) {
             <tbody>
                 <?php
                 // Database connection (update DB name if needed)
-                $mysqli = new mysqli("localhost", "root", "", "u973762102_admin");
+                $mysqli = new mysqli("localhost", "u621774021_dollario", "Copy@75970", "u621774021_dollario");
 
-                // Check connection
                 if ($mysqli->connect_error) {
                     die("Connection failed: " . $mysqli->connect_error);
                 }
 
-                $sql = "SELECT * FROM admin_users ORDER BY created_at DESC LIMIT 5"; // adjust LIMIT as needed
+                $filterWhere = $whereClause;
+                $sql = "SELECT id, username, email, mobile, status FROM users $filterWhere ORDER BY id DESC";
                 $result = $mysqli->query($sql);
 
-                if ($result->num_rows > 0) {
+                if ($result && $result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                         $userId = "#USR" . str_pad($row['id'], 4, '0', STR_PAD_LEFT);
-                        $name = $row['username'] ?? 'N/A';
-                        $phone = $row['phone'] ?? 'N/A';
-                        $joined = isset($row['created_at']) ? date('d M, h:i A', strtotime($row['created_at'])) : 'N/A';
-                        $status = $row['status'] ?? 'Unknown';
-                        //$img = !empty($row['avatar']) ? $row['avatar'] : "../images/default-user.jpg"; // fallback if image not available
-                
-                        // status badge class logic
-                        $statusClass = "";
-                        if (strtolower($status) == "verified")
-                            $statusClass = "status-approved";
-                        elseif (strtolower($status) == "pending kyc")
-                            $statusClass = "status-pending";
-                        elseif (strtolower($status) == "kyc rejected")
-                            $statusClass = "status-rejected";
+                        $name = htmlspecialchars($row['username'] ?? 'N/A');
+                        $phone = htmlspecialchars($row['mobile'] ?? 'N/A');
+                        $joined = 'N/A';
+                        $status = ucfirst($row['status'] ?? 'Unknown');
 
-                        echo "<tr data-user-id='{$userId}'>
+                        $statusClass = "";
+                        if (strtolower($row['status']) == "active") $statusClass = "status-approved";
+                        elseif (strtolower($row['status']) == "pending") $statusClass = "status-pending";
+
+                        echo "<tr>
             <td>{$userId}</td>
-            <td>
-                <div style='display: flex; align-items: center; gap: 10px;'>
-                      <div style='display: flex; align-items: center; gap: 10px;'>
-                   
-                    <span>{$name}</span>
-                </div>
-                 
-                </div>
-            </td>
+            <td><span>{$name}</span></td>
             <td>{$phone}</td>
             <td>{$joined}</td>
             <td><span class='status-badge {$statusClass}'>{$status}</span></td>
             <td>
-                <button class='btn btn-sm btn-outline' data-tooltip='View Details' onclick=\"viewUserDetails('{$userId}')\">
-                    <span class='material-icons-round'>visibility</span>
-                </button>
-                <button class='btn btn-sm btn-outline' data-tooltip='Edit User' onclick=\"editUser('{$userId}')\">
-                    <span class='material-icons-round'>edit</span>
-                </button>
-                <button class='btn btn-sm btn-outline' data-tooltip='Send Message' onclick=\"messageUser('{$userId}')\">
-                    <span class='material-icons-round'>mail</span>
-                </button>
+                <button class='btn btn-sm btn-outline'><span class='material-icons-round'>visibility</span></button>
+                <button class='btn btn-sm btn-outline'><span class='material-icons-round'>edit</span></button>
             </td>
         </tr>";
                     }

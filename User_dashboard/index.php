@@ -962,7 +962,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </h1>
                 <p>Buy and sell USDT with INR instantly using our secure, lightning-fast exchange platform.</p>
                 <div class="cta-buttons">
-                    <a href="/User-Registration.html"><button class="btn btn-primary">
+                    <a href="auth/signup.php"><button class="btn btn-primary">
                             <i class="fas fa-rocket"></i>
                             Get Started
                         </button></a>
