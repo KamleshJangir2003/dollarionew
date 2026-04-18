@@ -260,7 +260,6 @@ include '../templates/header.php';
 
             <div class="bfoot">
               <span class="btime"><?= $time ?></span>
-              <span class="s-pill <?= $sc ?>"><?= htmlspecialchars($chat['status']??'Pending') ?></span>
             </div>
           </div>
           <div class="reply-icon" onclick="setReply('<?= $chat['id'] ?>','<?= htmlspecialchars(addslashes(mb_substr($msgText,0,60)), ENT_QUOTES) ?>','<?= $isAdmin ? 'You' : htmlspecialchars(addslashes($activeUserInfo['username']??'User'), ENT_QUOTES) ?>')">
@@ -362,6 +361,77 @@ include '../templates/header.php';
   if (window.innerWidth <= 640 && <?= $activeUserId ? 'true' : 'false' ?>) {
     document.getElementById('userList').classList.add('hidden');
   }
+
+  // ── Real-time polling ──
+  const activeUserId = <?= $activeUserId ?>;
+  let lastMsgId = <?= !empty($chats) ? end($chats)['id'] : 0 ?>;
+  const activeUname = <?= json_encode($activeUserInfo['username'] ?? '') ?>;
+
+  function appendAdminMsg(chat) {
+    const isAdmin = chat.sender === 'admin';
+    const msgText = isAdmin ? (chat.admin_reply || '') : chat.message;
+    const time = new Date(chat.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const wrapClass   = isAdmin ? 'admin-msg' : 'user-msg';
+    const bubbleClass = isAdmin ? 'admin' : 'user';
+    const bavClass    = isAdmin ? 'a' : 'u';
+    const icon        = isAdmin ? 'support_agent' : 'person';
+    const nameLabel   = isAdmin ? 'You' : activeUname;
+
+    const div = document.createElement('div');
+    div.className = 'msg-wrap ' + wrapClass;
+    div.id = 'msg-' + chat.id;
+    div.innerHTML = `
+      <div class="bav ${bavClass}"><span class="material-icons-round" style="font-size:12px">${icon}</span></div>
+      <div class="bubble-wrap">
+        <div class="bubble ${bubbleClass}" data-id="${chat.id}" data-text="${msgText.substring(0,60).replace(/"/g,'&quot;')}" data-name="${nameLabel}">
+          ${msgText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}
+          <div class="bfoot"><span class="btime">${time}</span></div>
+        </div>
+        <div class="reply-icon" onclick="setReply('${chat.id}','${msgText.substring(0,60).replace(/'/g,"\\'").replace(/\n/g,' ')}','${nameLabel}')">
+          <span class="material-icons-round" style="font-size:14px;color:#555">reply</span>
+        </div>
+      </div>`;
+
+    const chatBody = document.getElementById('chatBody');
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    lastMsgId = chat.id;
+  }
+
+  function updateUnreadBadges(unreadMap) {
+    document.querySelectorAll('.user-item').forEach(item => {
+      const uid = new URL(item.href, location.origin).searchParams.get('user');
+      const badge = item.querySelector('.unread');
+      const cnt = unreadMap[uid] || 0;
+      if (cnt > 0) {
+        if (badge) { badge.textContent = cnt; }
+        else {
+          const meta = item.querySelector('.u-meta');
+          if (meta) { const s = document.createElement('span'); s.className='unread'; s.textContent=cnt; meta.appendChild(s); }
+        }
+      } else {
+        if (badge) badge.remove();
+      }
+    });
+  }
+
+  function pollAdmin() {
+    fetch('get_chat_updates.php?user_id=' + activeUserId + '&after_id=' + lastMsgId)
+      .then(r => r.json())
+      .then(data => {
+        if (data.messages) data.messages.forEach(appendAdminMsg);
+        if (data.unread)   updateUnreadBadges(data.unread);
+      })
+      .catch(() => {});
+  }
+
+  if (activeUserId) setInterval(pollAdmin, 4000);
+  else setInterval(() => {
+    fetch('get_chat_updates.php?user_id=0&after_id=0')
+      .then(r => r.json())
+      .then(data => { if (data.unread) updateUnreadBadges(data.unread); })
+      .catch(() => {});
+  }, 5000);
 </script>
 </body>
 </html>

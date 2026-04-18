@@ -236,11 +236,7 @@ $uname = $uStmt->fetchColumn();
 
           <div class="bubble-foot">
             <span class="bubble-time"><?= $time ?></span>
-            <?php if ($isAdmin): ?>
-              <span class="s-pill <?= $statusClass ?>"><?= htmlspecialchars($chat['status']) ?></span>
-            <?php else: ?>
-              <span class="material-icons-round tick" style="font-size:13px">done_all</span>
-            <?php endif; ?>
+            <span class="material-icons-round tick" style="font-size:13px">done_all</span>
           </div>
         </div>
       </div>
@@ -321,6 +317,58 @@ $uname = $uStmt->fetchColumn();
     const el = document.getElementById('msg-' + id);
     if (el) { el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.opacity='0.4'; setTimeout(()=>el.style.opacity='1',1000); }
   }
+
+  // ── Real-time polling ──
+  let lastId = <?= !empty($chats) ? end($chats)['id'] : 0 ?>;
+  const uname = <?= json_encode($uname) ?>;
+
+  function appendMsg(chat) {
+    const isAdmin = chat.sender === 'admin';
+    const msgText = isAdmin ? (chat.admin_reply || '') : chat.message;
+    const time = new Date(chat.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const rowClass = isAdmin ? 'admin' : 'user';
+    const avClass  = isAdmin ? 'a' : 'u';
+    const icon     = isAdmin ? 'support_agent' : 'person';
+
+    // Remove typing indicator if admin replied
+    if (isAdmin) {
+      const typing = document.querySelector('.typing-row');
+      if (typing) typing.remove();
+    }
+
+    const div = document.createElement('div');
+    div.className = 'msg-row ' + rowClass;
+    div.id = 'msg-' + chat.id;
+    div.innerHTML = `
+      <div class="av ${avClass}"><span class="material-icons-round" style="font-size:13px">${icon}</span></div>
+      <div class="bubble ${rowClass}" data-id="${chat.id}" data-text="${msgText.substring(0,60).replace(/"/g,'&quot;')}" data-name="${isAdmin ? 'Support' : uname}">
+        ${msgText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}
+        <div class="bubble-foot">
+          <span class="bubble-time">${time}</span>
+          ${isAdmin ? '<span class="material-icons-round tick" style="font-size:13px">done_all</span>' : ''}
+        </div>
+      </div>`;
+
+    // Re-attach reply listeners
+    const bubble = div.querySelector('.bubble');
+    bubble.addEventListener('contextmenu', e => { e.preventDefault(); setReply(bubble.dataset.id, bubble.dataset.text, bubble.dataset.name); });
+    let timer;
+    bubble.addEventListener('touchstart', () => { timer = setTimeout(() => setReply(bubble.dataset.id, bubble.dataset.text, bubble.dataset.name), 500); });
+    bubble.addEventListener('touchend', () => clearTimeout(timer));
+
+    cb.appendChild(div);
+    cb.scrollTop = cb.scrollHeight;
+    lastId = chat.id;
+  }
+
+  function pollMessages() {
+    fetch('get_new_messages.php?after_id=' + lastId)
+      .then(r => r.json())
+      .then(msgs => { msgs.forEach(appendMsg); })
+      .catch(() => {});
+  }
+
+  setInterval(pollMessages, 4000);
 </script>
 </body>
 </html>
