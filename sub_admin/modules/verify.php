@@ -6,7 +6,7 @@ if (!isset($_SESSION['admin_logged_in'])) {
 }
 
 // Database connection
-$pdo = new PDO("mysql:host=localhost;dbname=dollario_admin", "root", "");
+$pdo = new PDO("mysql:host=localhost;dbname=u621774021_dollario", "u621774021_dollario", "Copy@75970");
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Fetch all unverified users

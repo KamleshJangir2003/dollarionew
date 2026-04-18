@@ -2,7 +2,7 @@ abcd
 <?php include '../templates/sidebar.php'; include '../templates/header.php';  ?>
 <?php
 // Database connection
-$conn = new mysqli("localhost", "root", "", "dollario_admin");
+$conn = new mysqli("localhost", "u621774021_dollario", "Copy@75970", "u621774021_dollario");
 
 // Check connection
 if ($conn->connect_error) {

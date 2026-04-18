@@ -1,6 +1,6 @@
 <?php include '../templates/sidebar.php'; include '../templates/header.php';  ?>
 <?php
-$conn = new mysqli("localhost", "root", "", "dollario_admin");
+$conn = new mysqli("localhost", "u621774021_dollario", "Copy@75970", "u621774021_dollario");
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
 // Handle Add Campaign
@@ -778,7 +778,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['addCampaign'])) {
         move_uploaded_file($_FILES["image"]["tmp_name"], $image_path);
     }
 
-    $conn = new mysqli("localhost", "root", "", "your_database");
+    $conn = new mysqli("localhost", "u621774021_dollario", "Copy@75970", "u621774021_dollario");
     $stmt = $conn->prepare("INSERT INTO campaigns (name, description, type, status, start_date, end_date, image, terms) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("ssssssss", $name, $description, $type, $status, $start_date, $end_date, $image_path, $terms);
     $stmt->execute();

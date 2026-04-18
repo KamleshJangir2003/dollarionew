@@ -4,9 +4,9 @@ include '../templates/header.php';
 
 // Database configuration
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'dollario_admin');
+define('DB_USER', 'u621774021_dollario');
+define('DB_PASS', 'Copy@75970');
+define('DB_NAME', 'u621774021_dollario');
 
 // Connect to database
 try {

@@ -4,10 +4,10 @@
 
 <?php
 // Database connection (example using PDO)
-$servername = "localhost"; // or $host = "localhost";
-$username = "root";
-$password = "";
-$dbname = "dollario_admin";
+$servername = "localhost";
+$username = "u621774021_dollario";
+$password = "Copy@75970";
+$dbname = "u621774021_dollario";
 
 try {
     $pdo = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password); // Use $servername here
@@ -378,7 +378,7 @@ $totalPages = ceil($totalTransactions / 5);
                     <tbody>
                     <?php
 // Database connection (update DB name if needed)
-$mysqli = new mysqli("localhost", "root", "", "dollario_admin");
+$mysqli = new mysqli("localhost", "u621774021_dollario", "Copy@75970", "u621774021_dollario");
 
 // Check connection
 if ($mysqli->connect_error) {

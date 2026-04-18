@@ -7,14 +7,11 @@ include('../templates/header.php'); // Adjust the path if needed
 <?php
 // DB connection
 $host = "localhost";
-$user = "root";
-$password = "";
-$dbname = "dollario_admin";
+$user = "u621774021_dollario";
+$password = "Copy@75970";
+$dbname = "u621774021_dollario";
 
-// Fix: use consistent connection variable name
 $conn = new mysqli($host, $user, $password, $dbname);
-
-// Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
@@ -421,58 +418,34 @@ while ($user = $result->fetch_assoc()) {
             <tbody>
                 <?php
                 // Database connection (update DB name if needed)
-                $mysqli = new mysqli("localhost", "root", "", "dollario_admin");
+                $mysqli = new mysqli("localhost", "u621774021_dollario", "Copy@75970", "u621774021_dollario");
 
                 // Check connection
                 if ($mysqli->connect_error) {
                     die("Connection failed: " . $mysqli->connect_error);
                 }
 
-                $sql = "SELECT * FROM admin_users ORDER BY created_at DESC LIMIT 5"; // adjust LIMIT as needed
+                $sql = "SELECT id, username, email, mobile, status FROM users ORDER BY id DESC";
                 $result = $mysqli->query($sql);
 
-                if ($result->num_rows > 0) {
+                if ($result && $result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                         $userId = "#USR" . str_pad($row['id'], 4, '0', STR_PAD_LEFT);
-                        $name = $row['username'] ?? 'N/A';
-                        $phone = $row['phone'] ?? 'N/A';
-                        $joined = isset($row['created_at']) ? date('d M, h:i A', strtotime($row['created_at'])) : 'N/A';
-                        $status = $row['status'] ?? 'Unknown';
-                        //$img = !empty($row['avatar']) ? $row['avatar'] : "../images/default-user.jpg"; // fallback if image not available
-                
-                        // status badge class logic
-                        $statusClass = "";
-                        if (strtolower($status) == "verified")
-                            $statusClass = "status-approved";
-                        elseif (strtolower($status) == "pending kyc")
-                            $statusClass = "status-pending";
-                        elseif (strtolower($status) == "kyc rejected")
-                            $statusClass = "status-rejected";
+                        $name = htmlspecialchars($row['username'] ?? 'N/A');
+                        $phone = htmlspecialchars($row['mobile'] ?? 'N/A');
+                        $joined = 'N/A';
+                        $status = ucfirst($row['status'] ?? 'Unknown');
+                        $statusClass = strtolower($row['status']) == "active" ? "status-completed" : "status-processing";
 
                         echo "<tr data-user-id='{$userId}'>
             <td>{$userId}</td>
-            <td>
-                <div style='display: flex; align-items: center; gap: 10px;'>
-                      <div style='display: flex; align-items: center; gap: 10px;'>
-                   
-                    <span>{$name}</span>
-                </div>
-                 
-                </div>
-            </td>
+            <td><span>{$name}</span></td>
             <td>{$phone}</td>
             <td>{$joined}</td>
             <td><span class='status-badge {$statusClass}'>{$status}</span></td>
             <td>
-                <button class='btn btn-sm btn-outline' data-tooltip='View Details' onclick=\"viewUserDetails('{$userId}')\">
-                    <span class='material-icons-round'>visibility</span>
-                </button>
-                <button class='btn btn-sm btn-outline' data-tooltip='Edit User' onclick=\"editUser('{$userId}')\">
-                    <span class='material-icons-round'>edit</span>
-                </button>
-                <button class='btn btn-sm btn-outline' data-tooltip='Send Message' onclick=\"messageUser('{$userId}')\">
-                    <span class='material-icons-round'>mail</span>
-                </button>
+                <button class='btn btn-sm btn-outline'><span class='material-icons-round'>visibility</span></button>
+                <button class='btn btn-sm btn-outline'><span class='material-icons-round'>edit</span></button>
             </td>
         </tr>";
                     }
