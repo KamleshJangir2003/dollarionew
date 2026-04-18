@@ -96,6 +96,7 @@
     <li><a href="referral.php"><span class="material-icons">group_add</span> Referral</a></li>
     <li><a href="notifications.php"><span class="material-icons">notifications</span> Notifications</a></li>
     <li><a href="security.php"><span class="material-icons">lock</span> Security</a></li>
+    <li><a href="my_help_requests.php"><span class="material-icons">support_agent</span> Help & Support</a></li>
   </ul>
   <div class="sidebar-logout">
     <a href="../logout.php"><span class="material-icons">logout</span> Logout</a>

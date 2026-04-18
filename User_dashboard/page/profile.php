@@ -25,10 +25,16 @@ $walletStmt = $pdo->prepare("SELECT * FROM wallets WHERE user_id = ?");
 $walletStmt->execute([$userId]);
 $wallet = $walletStmt->fetch(PDO::FETCH_ASSOC) ?: ['inr_balance' => 0, 'usdt_balance' => 0];
 
-// KYC
-$kycStmt = $pdo->prepare("SELECT status FROM kyc_verifications WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+// KYC - check user_kyc table first (most accurate)
+$kycStmt = $pdo->prepare("SELECT status FROM user_kyc WHERE user_id = ? ORDER BY id DESC LIMIT 1");
 $kycStmt->execute([$userId]);
-$kyc = $kycStmt->fetch(PDO::FETCH_ASSOC) ?: ['status' => 'not_verified'];
+$kycRow = $kycStmt->fetch(PDO::FETCH_ASSOC);
+if (!$kycRow) {
+    $kycStmt2 = $pdo->prepare("SELECT status FROM kyc_verifications WHERE user_id = ? ORDER BY id DESC LIMIT 1");
+    $kycStmt2->execute([$userId]);
+    $kycRow = $kycStmt2->fetch(PDO::FETCH_ASSOC);
+}
+$kyc = $kycRow ?: ['status' => 'not_verified'];
 
 // Bank accounts
 $bankStmt = $pdo->prepare("SELECT * FROM bank_accounts WHERE user_id = ? ORDER BY is_primary DESC, added_on DESC");
@@ -44,6 +50,8 @@ $flash_success = $flash_error = '';
 if (isset($_GET['success'])) {
     if ($_GET['success'] === 'profile_updated')  $flash_success = 'Profile updated successfully!';
     if ($_GET['success'] === 'password_changed') $flash_success = 'Password changed successfully!';
+    if ($_GET['success'] === 'bank_added')       $flash_success = 'Bank account added successfully!';
+    if ($_GET['success'] === 'primary_updated')  $flash_success = 'Primary account updated!';
 }
 if (isset($_GET['error'])) {
     if ($_GET['error'] === 'update_failed')      $flash_error = 'Failed to update. Please try again.';
@@ -51,11 +59,15 @@ if (isset($_GET['error'])) {
     if ($_GET['error'] === 'password_mismatch')  $flash_error = 'New passwords do not match.';
 }
 
-$kycColor = ['verified' => '#22c55e', 'pending' => '#f59e0b', 'not_verified' => '#ef4444'];
-$kycIcon  = ['verified' => 'check_circle', 'pending' => 'pending', 'not_verified' => 'warning'];
-$kycLabel = ['verified' => 'Identity Verified', 'pending' => 'Verification Pending', 'not_verified' => 'Not Verified'];
-$kycSub   = ['verified' => 'Your account is fully verified', 'pending' => 'Under review by our team', 'not_verified' => 'Complete KYC for full access'];
-$ks = $kyc['status'];
+// Normalize status — user_kyc uses 'approved', kyc_verifications uses 'verified'
+$ksRaw = $kyc['status'] ?? 'not_verified';
+$ks = ($ksRaw === 'approved') ? 'verified' : $ksRaw;
+if (!in_array($ks, ['verified','pending','rejected','not_verified'])) $ks = 'not_verified';
+
+$kycColor = ['verified' => '#22c55e', 'approved' => '#22c55e', 'pending' => '#f59e0b', 'rejected' => '#ef4444', 'not_verified' => '#ef4444'];
+$kycIcon  = ['verified' => 'check_circle', 'approved' => 'check_circle', 'pending' => 'pending', 'rejected' => 'cancel', 'not_verified' => 'warning'];
+$kycLabel = ['verified' => 'Identity Verified', 'approved' => 'Identity Verified', 'pending' => 'Verification Pending', 'rejected' => 'KYC Rejected', 'not_verified' => 'Not Verified'];
+$kycSub   = ['verified' => 'Your account is fully verified', 'approved' => 'Your account is fully verified', 'pending' => 'Under review by our team', 'rejected' => 'Please re-submit correct documents', 'not_verified' => 'Complete KYC for full access'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -237,14 +249,14 @@ $ks = $kyc['status'];
     <!-- KYC Verification -->
     <div class="card">
       <div class="card-title"><span class="material-icons-round">verified_user</span> KYC Verification</div>
-      <div class="kyc-box" style="background:<?= $kycColor[$ks] ?>18; color:<?= $kycColor[$ks] ?>">
-        <span class="material-icons-round" style="font-size:28px"><?= $kycIcon[$ks] ?></span>
+      <div class="kyc-box" style="background:<?= $kycColor[$ksRaw] ?? '#ef444418' ?>18; color:<?= $kycColor[$ksRaw] ?? '#ef4444' ?>">
+        <span class="material-icons-round" style="font-size:28px"><?= $kycIcon[$ksRaw] ?? 'warning' ?></span>
         <div>
-          <div style="font-weight:700"><?= $kycLabel[$ks] ?></div>
-          <div style="font-size:0.82rem;margin-top:2px"><?= $kycSub[$ks] ?></div>
+          <div style="font-weight:700"><?= $kycLabel[$ksRaw] ?? 'Not Verified' ?></div>
+          <div style="font-size:0.82rem;margin-top:2px"><?= $kycSub[$ksRaw] ?? 'Complete KYC for full access' ?></div>
         </div>
       </div>
-      <?php if ($ks !== 'verified'): ?>
+      <?php if (!in_array($ksRaw, ['verified','approved'])): ?>
         <a href="kyc.php" class="btn btn-primary"><span class="material-icons-round">verified</span> Complete KYC</a>
       <?php endif; ?>
     </div>

@@ -1,329 +1,187 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
+include '../includes/db.php';
+
+// Handle approve / reject
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['kyc_id'])) {
+    $kycId  = intval($_POST['kyc_id']);
+    $userId = intval($_POST['user_id']);
+    $action = $_POST['action'];
+
+    if ($action === 'approve') {
+        $conn->query("UPDATE user_kyc SET status='approved', rejection_reason=NULL WHERE id=$kycId");
+        $conn->query("UPDATE kyc_verifications SET status='approved' WHERE user_id=$userId");
+        $success = "KYC approved successfully.";
+    } elseif ($action === 'reject') {
+        $reason = $conn->real_escape_string($_POST['reason'] ?? 'Documents not clear');
+        $conn->query("UPDATE user_kyc SET status='rejected', rejection_reason='$reason' WHERE id=$kycId");
+        $conn->query("UPDATE kyc_verifications SET status='rejected' WHERE user_id=$userId");
+        $success = "KYC rejected.";
+    }
+}
+
 include '../templates/sidebar.php';
 include '../templates/header.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KYC Management | Admin Dashboard</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #0C8773;
-            --card-bg: #ffffff;
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-color: #2d2d2d;
-        }
-
-        /* Dark mode variables */
-        .dark-mode {
-            --card-bg: #1f2937;
-            --text-color: #f9fafb;
-            --glass-border: rgba(31, 41, 55, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        body {
-            background: #f3f4f6;
-            color: var(--text-color);
-            transition: background 0.3s ease;
-        }
-
-        /* Table Styles */
-        .data-table-container {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1rem;
-            margin: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            margin-left: 260px;
-            overflow-x: auto;
-        }
-
-        #kycTable {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        #kycTable th, #kycTable td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        #kycTable tr:hover {
-            background: rgba(0, 0, 0, 0.03);
-        }
-
-        /* Responsive Table */
-        @media (max-width: 768px) {
-            #kycTable thead {
-                display: none;
-            }
-
-            #kycTable tr {
-                display: block;
-                margin-bottom: 1rem;
-                border: 1px solid #e5e7eb;
-                border-radius: 8px;
-            }
-
-            #kycTable td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0.5rem;
-                text-align: right;
-            }
-
-            #kycTable td::before {
-                content: attr(data-label);
-                font-weight: 500;
-                margin-right: 1rem;
-                text-align: left;
-            }
-            .header{
-                margin-left: 0px;
-            }
-            .data-table-container{
-                margin-left: 0px;
-            }
-        }
-
-        /* Status Badges */
-        .kyc-status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-pending {
-            background: #ffedd5;
-            color: #c2410c;
-        }
-
-        .status-approved {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-rejected {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            max-width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        /* Document Preview */
-        .document-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin: 1rem 0;
-        }
-
-        .document-card {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1rem;
-        }
-
-        .document-image {
-            width: 100%;
-            height: 200px;
-            object-fit: contain;
-            background: #f3f4f6;
-            border-radius: 4px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>KYC Approvals - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    * { box-sizing:border-box; }
+    body { background:#f3f4f6; }
+    .container { margin-left:260px; max-width:calc(100vw - 260px); }
+    @media(max-width:767px) { .container { margin-left:0; max-width:100%; padding:12px; } }
+    .doc-thumb { width:80px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0; cursor:pointer; }
+    .doc-link { font-size:0.78rem; color:#6366f1; text-decoration:none; display:block; margin-top:4px; }
+    .badge-pending  { background:#fef9c3; color:#92400e; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+    .badge-approved { background:#dcfce7; color:#166534; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+    .badge-rejected { background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+    /* Modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff; border-radius:14px; padding:24px; max-width:500px; width:90%; }
+    .modal-box img { width:100%; border-radius:8px; margin-bottom:10px; }
+  </style>
 </head>
 <body>
-    <div class="data-table-container">
-        <table id="kycTable">
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Submitted</th>
-                    <th>Documents</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="kycTableBody">
-                <!-- Dynamically populated -->
-            </tbody>
-        </table>
+<div class="container mt-4">
+  <h4 class="mb-4 fw-bold">KYC Approvals</h4>
+
+  <?php if (!empty($success)): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+  <?php endif; ?>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>User</th>
+            <th>PAN Card</th>
+            <th>Aadhaar</th>
+            <th>Bank Statement</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          $result = $conn->query("SELECT k.*, u.username, u.email FROM user_kyc k LEFT JOIN users u ON u.id = k.user_id ORDER BY k.updated_at DESC");
+          $i = 1;
+          while ($row = $result->fetch_assoc()):
+            $base = 'http://localhost/dollario-new/User_dashboard/';
+            // Fix any remaining double slashes in path
+            $row['pan_card']       = preg_replace('#kyc_documents//+#', 'kyc_documents/' . $row['user_id'] . '/', $row['pan_card'] ?? '');
+            $row['aadhaar_card']   = preg_replace('#kyc_documents//+#', 'kyc_documents/' . $row['user_id'] . '/', $row['aadhaar_card'] ?? '');
+            $row['bank_statement'] = preg_replace('#kyc_documents//+#', 'kyc_documents/' . $row['user_id'] . '/', $row['bank_statement'] ?? '');
+          ?>
+          <tr>
+            <td><?= $i++ ?></td>
+            <td>
+              <strong><?= htmlspecialchars($row['username'] ?? 'N/A') ?></strong><br>
+              <small class="text-muted"><?= htmlspecialchars($row['email'] ?? '') ?></small>
+            </td>
+            <td>
+              <?php if ($row['pan_card']): ?>
+                <?php $ext = strtolower(pathinfo($row['pan_card'], PATHINFO_EXTENSION)); ?>
+                <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
+                  <img src="<?= $base . $row['pan_card'] ?>" class="doc-thumb" onclick="viewDoc('<?= $base . $row['pan_card'] ?>')">
+                <?php else: ?>
+                  <a href="<?= $base . $row['pan_card'] ?>" target="_blank" class="doc-link">📄 View PDF</a>
+                <?php endif; ?>
+              <?php else: echo '<span class="text-muted">—</span>'; endif; ?>
+            </td>
+            <td>
+              <?php if ($row['aadhaar_card']): ?>
+                <?php $ext = strtolower(pathinfo($row['aadhaar_card'], PATHINFO_EXTENSION)); ?>
+                <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
+                  <img src="<?= $base . $row['aadhaar_card'] ?>" class="doc-thumb" onclick="viewDoc('<?= $base . $row['aadhaar_card'] ?>')">
+                <?php else: ?>
+                  <a href="<?= $base . $row['aadhaar_card'] ?>" target="_blank" class="doc-link">📄 View PDF</a>
+                <?php endif; ?>
+              <?php else: echo '<span class="text-muted">—</span>'; endif; ?>
+            </td>
+            <td>
+              <?php if ($row['bank_statement']): ?>
+                <?php $ext = strtolower(pathinfo($row['bank_statement'], PATHINFO_EXTENSION)); ?>
+                <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
+                  <img src="<?= $base . $row['bank_statement'] ?>" class="doc-thumb" onclick="viewDoc('<?= $base . $row['bank_statement'] ?>')">
+                <?php else: ?>
+                  <a href="<?= $base . $row['bank_statement'] ?>" target="_blank" class="doc-link">📄 View PDF</a>
+                <?php endif; ?>
+              <?php else: echo '<span class="text-muted">—</span>'; endif; ?>
+            </td>
+            <td><span class="badge-<?= $row['status'] ?>"><?= ucfirst($row['status']) ?></span></td>
+            <td><?= date('d M Y', strtotime($row['updated_at'])) ?></td>
+            <td>
+              <?php if ($row['status'] === 'pending'): ?>
+                <form method="POST" style="display:inline" onsubmit="return confirm('Approve this KYC?')">
+                  <input type="hidden" name="kyc_id" value="<?= $row['id'] ?>">
+                  <input type="hidden" name="user_id" value="<?= $row['user_id'] ?>">
+                  <input type="hidden" name="action" value="approve">
+                  <button class="btn btn-success btn-sm">✔ Approve</button>
+                </form>
+                <button class="btn btn-danger btn-sm ms-1" onclick="openReject(<?= $row['id'] ?>, <?= $row['user_id'] ?>)">✘ Reject</button>
+              <?php else: ?>
+                <span class="text-muted">—</span>
+              <?php endif; ?>
+            </td>
+          </tr>
+          <?php endwhile; ?>
+        </tbody>
+      </table>
     </div>
+  </div>
+</div>
 
-    <!-- KYC Review Modal -->
-    <div class="modal" id="reviewModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Review KYC</h3>
-                <button onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="userDetails"></div>
-                <div class="document-grid" id="documentContainer"></div>
-                <div class="action-buttons">
-                    <button onclick="approveKYC()">Approve</button>
-                    <button onclick="rejectKYC()">Reject</button>
-                </div>
-            </div>
-        </div>
+<!-- Image Preview Modal -->
+<div class="modal-overlay" id="imgModal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <strong>Document Preview</strong>
+      <button onclick="closeModal()" style="border:none;background:none;font-size:1.4rem;cursor:pointer">×</button>
     </div>
+    <img id="modalImg" src="" alt="Document">
+  </div>
+</div>
 
-    <script>
-        // Mock Database
-        const kycDB = {
-            applications: [
-                {
-                    id: 'KYC001',
-                    user: {
-                        name: 'John Doe',
-                        email: 'john@example.com',
-                        joined: '2024-01-15'
-                    },
-                    submitted: '2024-03-01T14:30:00',
-                    documents: {
-                        pan: 'pan.jpg',
-                        aadhaar: ['aadhaar-front.jpg', 'aadhaar-back.jpg']
-                    },
-                    status: 'pending',
-                    notes: ''
-                },
-                // Add more entries as needed
-            ],
+<!-- Reject Modal -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <strong>Reject KYC</strong>
+      <button onclick="closeReject()" style="border:none;background:none;font-size:1.4rem;cursor:pointer">×</button>
+    </div>
+    <form method="POST">
+      <input type="hidden" name="action" value="reject">
+      <input type="hidden" name="kyc_id" id="r_kyc_id">
+      <input type="hidden" name="user_id" id="r_user_id">
+      <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:6px">Rejection Reason</label>
+      <textarea name="reason" rows="3" style="width:100%;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.9rem;margin-bottom:14px" placeholder="e.g. Documents are blurry, PAN not visible..." required></textarea>
+      <button type="submit" class="btn btn-danger w-100">Reject KYC</button>
+    </form>
+  </div>
+</div>
 
-            getPending: () => kycDB.applications.filter(app => app.status === 'pending'),
-            updateStatus: (id, status, notes) => {
-                const index = kycDB.applications.findIndex(app => app.id === id);
-                if (index > -1) {
-                    kycDB.applications[index].status = status;
-                    kycDB.applications[index].notes = notes;
-                    return true;
-                }
-                return false;
-            }
-        };
+<script>
+function viewDoc(src) {
+  document.getElementById('modalImg').src = src;
+  document.getElementById('imgModal').classList.add('open');
+}
+function closeModal() { document.getElementById('imgModal').classList.remove('open'); }
 
-        // UI Functions
-        function renderTable() {
-            const tbody = document.getElementById('kycTableBody');
-            tbody.innerHTML = '';
-
-            kycDB.getPending().forEach(app => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td data-label="User">
-                        <div class="user-info">
-                            <strong>${app.user.name}</strong>
-                            <small>${app.user.email}</small>
-                        </div>
-                    </td>
-                    <td data-label="Submitted">
-                        ${new Date(app.submitted).toLocaleDateString()}
-                    </td>
-                    <td data-label="Documents">
-                        PAN + Aadhaar
-                    </td>
-                    <td data-label="Status">
-                        <span class="kyc-status-badge status-${app.status}">
-                            ${app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                        </span>
-                    </td>
-                    <td data-label="Actions">
-                        <button onclick="openReview('${app.id}')">Review</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        let currentReviewId = null;
-
-        function openReview(id) {
-            currentReviewId = id;
-            const app = kycDB.applications.find(a => a.id === id);
-            
-            document.getElementById('userDetails').innerHTML = `
-                <h4>${app.user.name}</h4>
-                <p>Member since: ${new Date(app.user.joined).toLocaleDateString()}</p>
-            `;
-
-            document.getElementById('documentContainer').innerHTML = `
-                <div class="document-card">
-                    <h4>PAN Card</h4>
-                    <img src="${app.documents.pan}" class="document-image">
-                </div>
-                <div class="document-card">
-                    <h4>Aadhaar Card</h4>
-                    ${app.documents.aadhaar.map(img => `
-                        <img src="${img}" class="document-image">
-                    `).join('')}
-                </div>
-            `;
-
-            document.getElementById('reviewModal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('reviewModal').style.display = 'none';
-        }
-
-        function approveKYC() {
-            if (kycDB.updateStatus(currentReviewId, 'approved', 'Approved by admin')) {
-                renderTable();
-                closeModal();
-                alert('KYC Approved successfully!');
-            }
-        }
-
-        function rejectKYC() {
-            const notes = prompt('Enter rejection reason:');
-            if (notes && kycDB.updateStatus(currentReviewId, 'rejected', notes)) {
-                renderTable();
-                closeModal();
-                alert('KYC Rejected');
-            }
-        }
-
-        // Initial render
-        renderTable();
-    </script>
+function openReject(kycId, userId) {
+  document.getElementById('r_kyc_id').value = kycId;
+  document.getElementById('r_user_id').value = userId;
+  document.getElementById('rejectModal').classList.add('open');
+}
+function closeReject() { document.getElementById('rejectModal').classList.remove('open'); }
+</script>
 </body>
 </html>
-<?php include '../templates/footer.php'; ?>

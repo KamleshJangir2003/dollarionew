@@ -1,40 +1,22 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) session_start();
+require_once '../config/db.php';
 
-// DB Connection
-$host = 'localhost';
-$dbname = 'u973762102_adming';
-$username = 'u973762102_dollario12';
-$password = 'Dollari@98';
-$conn = mysqli_connect($host, $username, $password, $dbname);
-
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
-
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user_id = $_SESSION['user_id'] ?? null;  // use session user_id
-    $subject = $_POST['subject'] ?? null;
-    $message = $_POST['message'] ?? null;
+    $user_id = $_SESSION['user_id'] ?? null;
+    $subject = trim($_POST['subject'] ?? '');
+    $message = trim($_POST['message'] ?? '');
 
     if (!$user_id || !$subject || !$message) {
         echo "<script>alert('Please fill all the fields.'); window.history.back();</script>";
         exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO user_help_requests (user_id, subject, message, created_at) VALUES (?, ?, ?, NOW())");
-    $stmt->bind_param("iss", $user_id, $subject, $message);
+    $pdo->prepare("INSERT INTO help_requests (user_id, subject, message, status, created_at) VALUES (?, ?, ?, 'Pending', NOW())")
+        ->execute([$user_id, $subject, $message]);
 
-    if ($stmt->execute()) {
-        echo "<script>alert('Help request sent successfully!'); window.location.href='submit_help.php';</script>";
-    } else {
-        echo "<script>alert('Something went wrong!'); window.history.back();</script>";
-    }
-
-    $stmt->close();
+    header("Location: dashboard.php?help_sent=1");
+    exit;
 }
 ?>
 
@@ -139,6 +121,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Help Icon Button -->
   <button id="openHelpModal" title="Need Help?">❓</button>
+
+  <?php if (isset($_GET['sent'])): ?>
+  <div style="position:fixed;top:20px;right:20px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:14px 20px;border-radius:10px;font-family:Poppins,sans-serif;font-size:0.9rem;font-weight:600;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+    ✅ Help request submitted! We'll get back to you soon.
+  </div>
+  <script>setTimeout(()=>document.querySelector('[style*="f0fdf4"]').remove(), 4000);</script>
+  <?php endif; ?>
 
   <!-- Help Modal -->
   <div id="helpModal">

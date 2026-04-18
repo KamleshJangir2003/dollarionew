@@ -285,6 +285,12 @@ $priceChange24h = 0;
 
   <!-- Welcome -->
   <div class="welcome-bar">
+  <?php if (isset($_GET['help_sent'])): ?>
+    <div style="position:fixed;top:20px;right:20px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:14px 20px;border-radius:10px;font-size:0.88rem;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.1)">
+      ✅ Help request submitted! We'll get back to you soon.
+    </div>
+    <script>setTimeout(()=>{const el=document.querySelector('[style*="f0fdf4"]');if(el)el.remove();},4000);</script>
+  <?php endif; ?>
     <div>
       <h2>Welcome, <?php echo htmlspecialchars($user['username'] ?? 'User'); ?> 👋</h2>
       <span><?php echo date('l, d M Y'); ?></span>
@@ -342,8 +348,11 @@ $priceChange24h = 0;
         <h3><span class="material-icons-round">flash_on</span> Quick Actions</h3>
       </div>
       <div class="actions-grid">
+        <a href="../page/sdw/buy.php" class="action-btn">
+          <span class="material-icons-round">shopping_cart</span>Buy USDT
+        </a>
         <a href="../page/sdw/sell.php" class="action-btn">
-          <span class="material-icons-round">upload</span>Sell Crypto
+          <span class="material-icons-round">upload</span>Sell USDT
         </a>
         <a href="../page/sdw/usdt_deposit.php" class="action-btn">
           <span class="material-icons-round">currency_bitcoin</span>Deposit USDT

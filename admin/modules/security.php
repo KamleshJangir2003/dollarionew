@@ -1,53 +1,26 @@
-<?php include '../templates/sidebar.php'; ?>
-<?php include '../templates/header.php'; ?>
 <?php
-// DB config
-$host = 'localhost';
-$dbname = 'u973762102_adming';
-$username = 'u973762102_dollario12';
-$password = 'Dollari@98';
-
-$connection = mysqli_connect($host, $username, $password, $database);
-if (!$connection) {
-    die("Connection failed: " . mysqli_connect_error());
-}
-
-// Fetch settings
-$query = "SELECT * FROM security_settings WHERE id = 1";
-$result = mysqli_query($connection, $query);
-if ($result && mysqli_num_rows($result) > 0) {
-    $settings = mysqli_fetch_assoc($result);
-} else {
-    $settings = [
-        'encryption_status' => '',
-        'ssl_status' => '',
-        'ip_whitelist_status' => '',
-        'rate_limiting_status' => ''
-    ];
-}
+if (session_status() === PHP_SESSION_NONE) session_start();
+include '../includes/db.php';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $encryption_status = mysqli_real_escape_string($connection, $_POST['encryption_status']);
-    $ssl_status = mysqli_real_escape_string($connection, $_POST['ssl_status']);
-    $ip_whitelist_status = mysqli_real_escape_string($connection, $_POST['ip_whitelist_status']);
-    $rate_limiting_status = mysqli_real_escape_string($connection, $_POST['rate_limiting_status']);
-
-    $update_query = "UPDATE security_settings SET 
-        encryption_status = '$encryption_status',
-        ssl_status = '$ssl_status',
-        ip_whitelist_status = '$ip_whitelist_status',
-        rate_limiting_status = '$rate_limiting_status'
-    WHERE id = 1";
-
-    if (mysqli_query($connection, $update_query)) {
-        echo "<script>alert('Security settings updated successfully!'); window.location.href='security.php';</script>";
-        exit();
-    } else {
-        echo "Error updating settings: " . mysqli_error($connection);
-    }
+    $enc  = $conn->real_escape_string($_POST['encryption_status']);
+    $ssl  = $conn->real_escape_string($_POST['ssl_status']);
+    $ip   = $conn->real_escape_string($_POST['ip_whitelist_status']);
+    $rate = $conn->real_escape_string($_POST['rate_limiting_status']);
+    $conn->query("UPDATE security_settings SET encryption_status='$enc', ssl_status='$ssl', ip_whitelist_status='$ip', rate_limiting_status='$rate' WHERE id=1");
+    $success = 'Security settings updated successfully!';
 }
+
+// Fetch settings
+$result = $conn->query("SELECT * FROM security_settings WHERE id = 1");
+$settings = ($result && $result->num_rows > 0) ? $result->fetch_assoc() : [
+    'encryption_status' => 'AES-256', 'ssl_status' => 'Active',
+    'ip_whitelist_status' => 'Enabled', 'rate_limiting_status' => 'Active (Limit: 5 attempts/min)'
+];
 ?>
+<?php include '../templates/sidebar.php'; ?>
+<?php include '../templates/header.php'; ?>
 
 
 <!-- HTML Form here -->
@@ -116,6 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </style>
 
 <body>
+    <?php if (!empty($success)): ?>
+        <div style="margin-left:260px;padding:12px 30px;"><div style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:12px 16px;border-radius:8px;"><?= $success ?></div></div>
+    <?php endif; ?>
     <section class="content">
         <h2>Update Security Settings</h2>
         <form action="security.php" method="POST">
