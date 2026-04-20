@@ -36,9 +36,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $error = "Email is already registered!";
         } else {
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role, status) VALUES (?, ?, ?, 'user', 'active')");
+            $referralCode = strtoupper(substr(md5(uniqid($username, true)), 0, 8));
+            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role, status, referral_code, mobile, otp) VALUES (?, ?, ?, 'user', 'active', ?, '', '')");
 
-            if ($stmt->execute([$username, $email, $hashedPassword])) {
+            if ($stmt->execute([$username, $email, $hashedPassword, $referralCode])) {
                 // Redirect to login after successful registration
                 $_SESSION['success'] = "Registration successful! Please log in.";
                 header("Location: login.php");

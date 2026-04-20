@@ -3,7 +3,7 @@ include('../auth_check.php');
 include('submit_help.php');
 require '../config/db.php';
 
-$userId = $_SESSION['user_id'] ?? 1;
+$userId = $_SESSION['user_id'];
 
 $userStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $userStmt->execute([$userId]);
