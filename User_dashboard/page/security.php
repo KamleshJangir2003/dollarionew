@@ -48,28 +48,16 @@ if (isset($_GET['logout_all'])) {
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Security Settings</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../responsive.css">
 <style>
-    
-    .container { width: auto; }
-    header {
-      display: none;
-      background: #0e1a2b;
-      padding: 10px 20px;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-      position: sticky;
-      top: 0;
-      z-index: 998;
-    }
-    .menu-container .menu-btn { font-size: 28px; background: none; border: none; color: white; cursor: pointer; }
+    .container { width: auto; margin-left: 250px; }
     @media (max-width: 768px) {
-      .container { margin-left: 0; }
-      header { display: flex; }
+      .container { margin-left: 0 !important; }
     }
-
 </style>
 </head>
 

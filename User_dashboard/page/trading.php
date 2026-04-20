@@ -68,12 +68,12 @@ $priceChange = (($currentPrice - $historicalData[count($historicalData)-2]['clos
     body {
       background: var(--background);
       min-height: 100vh;
-      display: flex;
       -webkit-font-smoothing: antialiased;
+      margin: 0;
     }
 
     /* ======== Main Content ======== */
-    .main-content { flex: 1; display: grid; gap: 24px; padding: 20px; min-width: 0; }
+    .main-content { margin-left: 250px; display: grid; gap: 24px; padding: 20px; min-width: 0; }
 
     /* ======== Page Header ======== */
     .page-header {
@@ -169,22 +169,22 @@ $priceChange = (($currentPrice - $historicalData[count($historicalData)-2]['clos
       height: 500px;
     }
 
-    /* ======== Responsive Styles ======== */
-    header { display: none; background: #0e1a2b; padding: 10px 20px; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 998; }
-    .menu-btn { font-size: 28px; background: none; border: none; color: white; cursor: pointer; }
     @media (max-width: 768px) {
-      .main-content { margin-left: 0; padding: 10px; }
+      .main-content { margin-left: 0 !important; padding: 10px; }
+      .chart-container { padding: 14px; height: auto; }
+      #candlestick-chart { height: 300px; }
       .chart-header { flex-direction: column; align-items: flex-start; gap: 12px; }
       .timeframe-selector { width: 100%; overflow-x: auto; padding-bottom: 8px; }
-      header { display: flex; }
+      .current-price { font-size: 1.3rem; }
+      .chart-types { flex-wrap: wrap; gap: 8px; }
     }
     
   </style>
 </head>
 <body>
   <?php include('../sidebar.php'); ?>
+  <?php include('../mobile_header.php'); ?>
   <main class="main-content">
-    <?php include('../mobile_header.php'); ?>
 
    
 
@@ -346,111 +346,5 @@ $priceChange = (($currentPrice - $historicalData[count($historicalData)-2]['clos
     }
   }
 </script>
-<script>
- const chart = LightweightCharts.createChart(document.getElementById('chart'), {
-  layout: { textColor: 'black', background: { type: 'solid', color: '#fff' } },
-  width: 800,
-  height: 500,
-});
-
-let currentSeries;
-let volumeSeries;
-const candleSeries = chart.addCandlestickSeries();
-const lineSeries = chart.addLineSeries();
-const areaSeries = chart.addAreaSeries();
-volumeSeries = chart.addHistogramSeries({ priceFormat: { type: 'volume' } });
-
-// Dummy Data
-const now = Math.floor(Date.now() / 1000);
-const formattedData = Array.from({ length: 100 }, (_, i) => {
-  const time = now - i * 86400;
-  const open = 100 + Math.sin(i) * 10;
-  const close = open + Math.random() * 5;
-  const high = Math.max(open, close) + Math.random() * 2;
-  const low = Math.min(open, close) - Math.random() * 2;
-  const volume = Math.floor(Math.random() * 1000);
-  return { time, open, high, low, close, volume };
-}).reverse();
-
-const volumeData = formattedData.map(d => ({
-  time: d.time,
-  value: d.volume,
-  color: d.close > d.open ? 'green' : 'red'
-}));
-
-function setSeries(type) {
-  if (currentSeries) currentSeries.applyOptions({ visible: false });
-  switch (type) {
-    case 'line':
-      currentSeries = lineSeries;
-      break;
-    case 'area':
-      currentSeries = areaSeries;
-      break;
-    case 'hollowCandle':
-      currentSeries = candleSeries;
-      break;
-  }
-  currentSeries.applyOptions({ visible: true });
-}
-
-function changeChartType(type) {
-  document.querySelectorAll('.chart-type-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  setSeries(type);
-  updateChartData(null, '1M');
-}
-
-function updateChartData(event, timeframe) {
-  if (event) {
-    document.querySelectorAll('.timeframe-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  let startTime;
-
-  switch (timeframe) {
-    case '1D':
-      startTime = now - 86400;
-      break;
-    case '5D':
-      startTime = now - 86400 * 5;
-      break;
-    case '1M':
-      startTime = now - 86400 * 30;
-      break;
-    case '3M':
-      startTime = now - 86400 * 90;
-      break;
-    case '1Y':
-      startTime = now - 86400 * 365;
-      break;
-    default:
-      startTime = 0;
-  }
-
-  const filteredData = formattedData.filter(d => d.time >= startTime);
-  const filteredVolume = volumeData.filter(d => d.time >= startTime);
-
-  if (currentSeries === candleSeries) {
-    currentSeries.setData(filteredData);
-  } else {
-    const lineData = filteredData.map(d => ({ time: d.time, value: d.close }));
-    currentSeries.setData(lineData);
-  }
-
-  volumeSeries.setData(filteredVolume);
-}
-
-// Load default
-setSeries('line');
-updateChartData(null, '1M');
-document.querySelector('.chart-type-btn:first-child').classList.add('active');
-
-</script>
-
-
-  
 </body>
 </html>

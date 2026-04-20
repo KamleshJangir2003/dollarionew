@@ -41,10 +41,10 @@ $uname = $uStmt->fetchColumn();
       --radius: 12px;
     }
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
-    html, body { height:100%; overflow:hidden; background:var(--bg-chat); }
+    html, body { height:100%; background:var(--bg-chat); }
 
     /* Layout */
-    .chat-page { margin-left:var(--sidebar); height:100vh; display:flex; flex-direction:column; }
+    .chat-page { margin-left:var(--sidebar); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
     .embed .chat-page { margin-left:0; }
 
     /* Header */
@@ -167,8 +167,9 @@ $uname = $uStmt->fetchColumn();
 
     /* Mobile */
     @media(max-width:768px) {
-      .chat-page { margin-left:0; }
+      .chat-page { margin-left:0; height:100dvh; }
       .msg-row { max-width:88%; }
+      .chat-footer { position:sticky; bottom:0; z-index:10; }
     }
   </style>
 </head>

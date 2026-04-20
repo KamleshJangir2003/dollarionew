@@ -33,7 +33,9 @@ $transactions = $stmt->fetchAll();
 <head>
   <meta charset="UTF-8">
   <title>Transaction History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../responsive.css">
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -47,20 +49,8 @@ $transactions = $stmt->fetchAll();
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-left: 250px;
     }
-    header {
-      display: none;
-      background: #0e1a2b;
-      padding: 10px 20px;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-      position: sticky;
-      top: 0;
-      z-index: 998;
-    }
-    .menu-btn { font-size: 28px; background: none; border: none; color: white; cursor: pointer; }
-
     .page-header {
       font-size: 26px;
       font-weight: 600;
@@ -121,9 +111,7 @@ $transactions = $stmt->fetchAll();
     }
 
     @media (max-width: 768px) {
-      .container { margin-left: 0; margin: 10px; padding: 15px; }
       table th, table td { font-size: 13px; padding: 10px; }
-      header { display: flex; }
     }
   </style>
 </head>
@@ -164,15 +152,15 @@ $transactions = $stmt->fetchAll();
           $amtColor  = in_array($row['type'], ['deposit', 'sell']) ? '#16a34a' : '#dc2626';
         ?>
           <tr>
-            <td>#<?= htmlspecialchars($row['id']) ?></td>
-            <td><?= $typeLabel ?></td>
-            <td style="color:<?= $amtColor ?>; font-weight:600;">
+            <td data-label="ID">#<?= htmlspecialchars($row['id']) ?></td>
+            <td data-label="Type"><?= $typeLabel ?></td>
+            <td data-label="Amount" style="color:<?= $amtColor ?>; font-weight:600;">
               <?= $amtPrefix ?><?= $row['currency'] === 'INR' ? '₹' : '' ?><?= number_format($row['amount'], 2) ?><?= $row['currency'] === 'USDT' ? ' USDT' : '' ?>
             </td>
-            <td><?= htmlspecialchars($row['currency']) ?></td>
-            <td style="font-size:13px; color:#64748b;"><?= htmlspecialchars($row['description'] ?? '') ?></td>
-            <td><span style="background:<?= $statusColor ?>20; color:<?= $statusColor ?>; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600;"><?= ucfirst($row['status'] ?? 'pending') ?></span></td>
-            <td><?= date('d M Y, h:i A', strtotime($row['created_at'])) ?></td>
+            <td data-label="Currency"><?= htmlspecialchars($row['currency']) ?></td>
+            <td data-label="Description" style="font-size:13px; color:#64748b;"><?= htmlspecialchars($row['description'] ?? '') ?></td>
+            <td data-label="Status"><span style="background:<?= $statusColor ?>20; color:<?= $statusColor ?>; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600;"><?= ucfirst($row['status'] ?? 'pending') ?></span></td>
+            <td data-label="Date"><?= date('d M Y, h:i A', strtotime($row['created_at'])) ?></td>
           </tr>
         <?php endforeach; ?>
       <?php else: ?>
