@@ -3,21 +3,19 @@ include '../templates/sidebar.php';
 include '../templates/header.php';
 include '../includes/db.php'; // your DB connection
 
-// Fetch login history with user info, including username
-$sql = "SELECT lh.*, au.email, au.username 
+// Fetch login history with user info
+$sql = "SELECT lh.*, u.email, u.username 
         FROM login_history lh 
-        JOIN admin_users au ON lh.user_id = au.id 
+        JOIN users u ON lh.user_id = u.id 
         ORDER BY lh.login_time DESC";
 $result = $conn->query($sql);
 
 // Total login records
-$countSql = "SELECT COUNT(*) as total_records FROM login_history lh 
-             JOIN admin_users au ON lh.user_id = au.id";
+$countSql = "SELECT COUNT(*) as total_records FROM login_history";
 $totalRecords = $conn->query($countSql)->fetch_assoc()['total_records'];
 
 // Total distinct users
-$countUsersSql = "SELECT COUNT(DISTINCT lh.user_id) as total_users FROM login_history lh 
-                  JOIN admin_users au ON lh.user_id = au.id";
+$countUsersSql = "SELECT COUNT(DISTINCT user_id) as total_users FROM login_history";
 $totalUsers = $conn->query($countUsersSql)->fetch_assoc()['total_users'];
 ?>
 
