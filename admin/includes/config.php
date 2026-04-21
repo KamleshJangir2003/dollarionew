@@ -1,8 +1,8 @@
 <?php
 $host    = 'localhost';
-$dbname  = 'dollario_admin';
-$username = 'root';
-$password = '';
+$dbname  = 'u621774021_mbpay';
+$username = 'u621774021_pay';
+$password = 'Mbpay999';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
