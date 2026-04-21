@@ -1,5 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) { session_name('admin_session'); session_start(); }
 include '../includes/db.php';
 
 // Send reply

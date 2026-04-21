@@ -1,4 +1,5 @@
 <?php
+session_name('admin_session');
 session_start();
 include 'includes/functions.php';
 
@@ -19,10 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $result->fetch_assoc();
       if (password_verify($password, $user['password'])) {
     // Set full admin details in session
+    $_SESSION['admin_id'] = $user['id'];
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['email'] = $user['email'];
     $_SESSION['username'] = $user['username'];
     $_SESSION['phone'] = $user['phone'];
+    $_SESSION['admin_logged_in'] = true;
 
     // Log IP & agent
     $ip_address = $_SERVER['REMOTE_ADDR'];
@@ -259,6 +262,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </div>
 
 </body>
-</html>
-
 </html>

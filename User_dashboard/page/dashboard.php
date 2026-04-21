@@ -1,6 +1,5 @@
 <?php
 include('../auth_check.php');
-include('submit_help.php');
 require '../config/db.php';
 
 $userId = $_SESSION['user_id'];

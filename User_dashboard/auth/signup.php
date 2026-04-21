@@ -1,4 +1,5 @@
 <?php
+session_name('user_session');
 session_start();
 if (isset($_SESSION['user_id'], $_SESSION['role']) && $_SESSION['role'] === 'user') {
     header("Location: ../dashboard.php");

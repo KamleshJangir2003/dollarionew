@@ -1,5 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) { session_name('user_session'); session_start(); }
 include('submit_help.php');
 
 $user_id = $_SESSION['user_id'] ?? null;

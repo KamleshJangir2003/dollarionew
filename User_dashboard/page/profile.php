@@ -1,5 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) { session_name('user_session'); session_start(); }
 require '../config/db.php';
 
 if (!isset($_SESSION['user_id'])) {

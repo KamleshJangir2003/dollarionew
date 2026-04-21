@@ -1,13 +1,16 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) { session_name('admin_session'); session_start(); }
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header("Location: ../login.php"); exit();
+}
 ?>
 <?php include '../templates/sidebar.php'; ?>
 <?php include '../templates/header.php'; ?>
 <?php
 $host     = 'localhost';
-$dbname   = 'u621774021_dollario';
-$username = 'u621774021_dollario';
-$password = 'Copy@75970';
+$dbname   = 'dollario_admin';
+$username = 'root';
+$password = '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -39,7 +42,7 @@ $totalPages        = ceil($totalTransactions / 5);
 $pendingKycCount      = $pdo->query("SELECT COUNT(*) FROM kyc_documents WHERE status='pending'")->fetchColumn();
 $activeInvestmentCount = $pdo->query("SELECT COUNT(*) FROM investments WHERE status='active'")->fetchColumn();
 
-$mysqli = new mysqli("localhost", "u621774021_dollario", "Copy@75970", "u621774021_dollario");
+$mysqli = new mysqli("localhost", "root", "", "dollario_admin");
 ?>
 
 <!DOCTYPE html>

@@ -1,7 +1,6 @@
 <?php
-// Session should be started in the main page file before including this header
-if (session_status() === PHP_SESSION_NONE) session_start();
-$_SESSION['user_name']      = $_SESSION['user_name'] ?? 'Admin';
+if (session_status() === PHP_SESSION_NONE) { session_name('admin_session'); session_start(); }
+$_SESSION['user_name']      = $_SESSION['user_name'] ?? $_SESSION['username'] ?? 'Admin';
 $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
 ?>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">

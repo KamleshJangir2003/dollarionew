@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    session_start(); // ✅ Safe: sirf tabhi chalega jab session start nahi hua ho
+    session_name('admin_session');
+    session_start();
 }
 require '../includes/config.php';
 // Connection check

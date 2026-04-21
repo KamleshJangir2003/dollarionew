@@ -1,11 +1,8 @@
 <?php
+session_name('admin_session');
 session_start();
-
-// Destroy the session to log the user out
-session_unset();  // Remove all session variables
-session_destroy();  // Destroy the session
-
-// Redirect to login page
+session_unset();
+session_destroy();
 header("Location: login.php");
 exit();
 ?>

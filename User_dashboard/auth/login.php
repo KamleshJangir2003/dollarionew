@@ -1,4 +1,5 @@
 <?php
+session_name('user_session');
 session_start();
 
 require_once __DIR__ . '/../config/db.php';
@@ -24,6 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             session_start();
             session_regenerate_id(true);
             $_SESSION['user_id'] = $id;
+            $_SESSION['role'] = 'user';
 
             $ip = $_SERVER['REMOTE_ADDR'];
             $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';

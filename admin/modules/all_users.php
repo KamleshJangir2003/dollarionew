@@ -1,5 +1,8 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) { session_name('admin_session'); session_start(); }
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header("Location: ../login.php"); exit();
+}
 include('../templates/sidebar.php');
 include('../templates/header.php');
 
@@ -9,9 +12,9 @@ include('../templates/header.php');
 //$password = "";
 //$dbname = "dollario_admin";//
 $host = 'localhost';
-$dbname = 'u621774021_dollario';
-$username = 'u621774021_dollario';
-$password = 'Copy@75970';
+$dbname = 'dollario_admin';
+$username = 'root';
+$password = '';
 $conn = new mysqli($host, $username, $password, $dbname);
 
 if ($conn->connect_error) {
@@ -344,7 +347,7 @@ $whereClause = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions)
             <tbody>
                 <?php
                 // Database connection (update DB name if needed)
-                $mysqli = new mysqli("localhost", "u621774021_dollario", "Copy@75970", "u621774021_dollario");
+                $mysqli = new mysqli("localhost", "root", "", "dollario_admin");
 
                 if ($mysqli->connect_error) {
                     die("Connection failed: " . $mysqli->connect_error);
