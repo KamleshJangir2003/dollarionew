@@ -7,7 +7,7 @@ include '../templates/sidebar.php';
 include '../templates/header.php';
 
 
-$pageTitle = "Notifications | Dollario Admin";
+$pageTitle = "Notifications | MBPAYo Admin";
 $activePage = "Notifications";
 
 // Handle notification actions

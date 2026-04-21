@@ -54,7 +54,7 @@ $referral_link = "http://" . $_SERVER['HTTP_HOST'] . "/dollario-new/User_dashboa
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Referral Program | Dollario</title>
+  <title>Referral Program | MBPAY</title>
   <link rel="icon" type="image/x-icon" href="../../favicon.ico">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="referral.css">
@@ -183,7 +183,7 @@ $referral_link = "http://" . $_SERVER['HTTP_HOST'] . "/dollario-new/User_dashboa
       <div class="step-item">
         <div class="step-num">2</div>
         <h4>They Sign Up</h4>
-        <p>Your friend registers on Dollario using your referral link and completes KYC verification</p>
+        <p>Your friend registers on MBPAY using your referral link and completes KYC verification</p>
       </div>
       <div class="step-item">
         <div class="step-num">3</div>

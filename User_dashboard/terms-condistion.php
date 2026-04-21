@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Terms & Conditions - DollarRio</title>
+  <title>Terms & Conditions - MBPAY</title>
   <style>
     body {
       margin: 0;

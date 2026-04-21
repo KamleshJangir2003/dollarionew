@@ -1,7 +1,7 @@
 <?php 
 include '../templates/sidebar.php';
 include '../templates/header.php';  
-$pageTitle = "Audit Logs | Dollario Admin";
+$pageTitle = "Audit Logs | MBPAY Admin";
 $activePage = "Audit Logs";
 
 

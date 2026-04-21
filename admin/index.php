@@ -1,6 +1,6 @@
 <?php
 // index.php
-$pageTitle = "DollaRio - Crypto Exchange";
+$pageTitle = "MBPAY - Crypto Exchange";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -8,7 +8,7 @@ $pageTitle = "DollaRio - Crypto Exchange";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DollaRio - Crypto Exchange</title>
+    <title>mbpay - Crypto Exchange</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
