@@ -41,6 +41,7 @@ $priceChange = (($currentPrice - $historicalData[count($historicalData)-2]['clos
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DollaRio Pro - USDT/INR Chart</title>
+  <link rel="icon" type="image/x-icon" href="../../favicon.ico">
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">

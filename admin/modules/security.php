@@ -30,6 +30,7 @@ $settings = ($result && $result->num_rows > 0) ? $result->fetch_assoc() : [
 <html>
 <head>
     <title>Security Settings</title>
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
 </head>
 <style>
     body {

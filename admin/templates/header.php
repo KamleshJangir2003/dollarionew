@@ -3,6 +3,14 @@ if (session_status() === PHP_SESSION_NONE) { session_name('admin_session'); sess
 $_SESSION['user_name']      = $_SESSION['user_name'] ?? $_SESSION['username'] ?? 'Admin';
 $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
 ?>
+<script>
+  (function(){
+    var l = document.createElement('link');
+    l.rel = 'icon'; l.type = 'image/png';
+    l.href = '/dollario-new/admin/images/dollario-fav.png';
+    document.head.appendChild(l);
+  })();
+</script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 <style>
   .adm-header {

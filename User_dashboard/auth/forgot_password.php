@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html>
 <head>
     <title>Forgot Password</title>
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <style>
         /* आपके स्टाइल यहाँ */
         body {

@@ -51,6 +51,7 @@ $whereClause = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>admin-All Users</title>
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 

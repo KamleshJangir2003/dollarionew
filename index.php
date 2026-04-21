@@ -1,6 +1,12 @@
 <?php
-// index.php
 $pageTitle = "DollaRio - Crypto Exchange";
+require_once __DIR__ . '/User_dashboard/config/db.php';
+try {
+    $rateRow = $pdo->query("SELECT rate FROM crypto_rates WHERE pair='USDT/INR' LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    $liveRate = $rateRow ? number_format(floatval($rateRow['rate']), 2) : '89.80';
+} catch (Exception $e) {
+    $liveRate = '89.80';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -12,7 +18,7 @@ $pageTitle = "DollaRio - Crypto Exchange";
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link rel="icon" type="image/x-icon" href="../images/dollario-fav.png">
+    <link rel="icon" type="image/x-icon" href="User_dashboard/image/dollario-fav.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -35,7 +41,7 @@ $pageTitle = "DollaRio - Crypto Exchange";
 
         body {
             font-family: 'Inter', sans-serif;
-            background: url('/images/backgroundimg.png') no-repeat center center;
+            background: url('User_dashboard/image/backgroundimg.png') no-repeat center center;
             background-size: cover;
             color: var(--text-primary);
             line-height: 1.6;
@@ -115,7 +121,7 @@ $pageTitle = "DollaRio - Crypto Exchange";
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            background: url('image/backgroundimg.png') no-repeat center center;
+            background: url('User_dashboard/image/backgroundimg.png') no-repeat center center;
             background-size: cover;
             background-attachment: fixed;
             position: relative;
@@ -785,7 +791,7 @@ $pageTitle = "DollaRio - Crypto Exchange";
 
   
  .price-ticker {
-    background-image: url('image/download.png');
+    background-image: url('User_dashboard/image/download.png');
     background-size: cover;
     background-position: 0 0;
     background-repeat: repeat-x;
@@ -834,7 +840,7 @@ $pageTitle = "DollaRio - Crypto Exchange";
     <header>
         <nav class="nav-container">
             <div class="sidebar-header">
-                <img src="image/Dollario-logo .svg" alt="Logo">
+                <img src="User_dashboard/image/Dollario-logo .svg" alt="Logo">
             </div>
             <div class="nav-links">
                 <a href="#"><i class="fas fa-exchange-alt"></i> Trade</a>
@@ -843,8 +849,8 @@ $pageTitle = "DollaRio - Crypto Exchange";
                <div class="dropdown">
   <a href="#"><i class="fas fa-user"></i> Account <i class="fas fa-caret-down"></i></a>
   <div class="dropdown-content">
-    <a href="auth/login.php">Login</a>
-    <a href="auth/signup.php">Register</a>
+    <a href="User_dashboard/auth/login.php">Login</a>
+    <a href="User_dashboard/auth/signup.php">Register</a>
   </div>
 </div>
 
@@ -876,8 +882,8 @@ $pageTitle = "DollaRio - Crypto Exchange";
                <div class="dropdown">
   <a href="#"><i class="fas fa-user"></i> Account <i class="fas fa-caret-down"></i></a>
   <div class="dropdown-content" style="background-color: black;">
-    <a href="login.php">Login</a>
-    <a href="register.php">Register</a>
+    <a href="User_dashboard/auth/login.php">Login</a>
+    <a href="User_dashboard/auth/signup.php">Register</a>
   </div>
 </div>
     
@@ -962,7 +968,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </h1>
                 <p>Buy and sell USDT with INR instantly using our secure, lightning-fast exchange platform.</p>
                 <div class="cta-buttons">
-                    <a href="auth/signup.php"><button class="btn btn-primary">
+                    <a href="User_dashboard/auth/signup.php"><button class="btn btn-primary">
                             <i class="fas fa-rocket"></i>
                             Get Started
                         </button></a>
@@ -975,9 +981,9 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="price-ticker">
                 
                 <div class="rupeee">
-                    <img src="image/golden-coin.png" alt="rupee-img">
+                    <img src="User_dashboard/image/golden-coin.png" alt="rupee-img">
                 </div>
-                <div class="price">₹83.24</div>
+                <div class="price">₹<?php echo $liveRate; ?></div>
                 <p>Current USDT/INR Price</p>
             </div>
         </div>
@@ -1148,9 +1154,9 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="footer-column">
                 <h3>Legal</h3>
                 <ul>
-                    <li><a href="terms-condistion.php">Terms & Conditions</a></li>
-                    <li><a href="privacy-policy.php">Privacy Policy</a></li>
-                    <li><a href="Faq.php">Faq</a></li>
+                    <li><a href="User_dashboard/terms-condistion.php">Terms &amp; Conditions</a></li>
+                    <li><a href="User_dashboard/privacy-policy.php">Privacy Policy</a></li>
+                    <li><a href="User_dashboard/Faq.php">FAQ</a></li>
                 </ul>
             </div>
 
@@ -1167,7 +1173,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         <div class="footer-bottom">
             <div class="footer-logo">
-                <img src="image/Dollario-logo .svg" alt="DollarRio Logo">
+                <img src="User_dashboard/image/Dollario-logo .svg" alt="DollarRio Logo">
             </div>
             <p class="copyright">© 2025 DollarRio. All Rights Reserved.</p>
         </div>

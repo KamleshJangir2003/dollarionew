@@ -25,6 +25,7 @@ $totalUsers = $conn->query($countUsersSql)->fetch_assoc()['total_users'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>admin-login_history</title>
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <style>
 * { box-sizing: border-box; }
 html, body { overflow-x: hidden; margin: 0; }
