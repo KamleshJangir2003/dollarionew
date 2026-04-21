@@ -11,16 +11,20 @@ require_once __DIR__ . '/../config/db.php';
 $success = '';
 $error = '';
 
+// Pre-fill referral code from URL
+$ref_from_url = trim($_GET['ref'] ?? '');
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Signup form submission block
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
+    $ref_code_input = strtoupper(trim($_POST['referral_code'] ?? ''));
 
-    // Validate inputs
     if (empty($username) || empty($email) || empty($password)) {
         $error = "All fields are required!";
+    } elseif (empty($ref_code_input)) {
+        $error = "Referral code is required to register!";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Invalid email format!";
     } elseif ($password !== $confirm_password) {
@@ -28,24 +32,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif (strlen($password) < 6) {
         $error = "Password must be at least 6 characters!";
     } else {
-        // Check if email already exists
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
+        // Validate referral code
+        $refStmt = $pdo->prepare("SELECT id FROM users WHERE referral_code = ?");
+        $refStmt->execute([$ref_code_input]);
+        $referrer = $refStmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($stmt->rowCount() > 0) {
-            $error = "Email is already registered!";
+        if (!$referrer) {
+            $error = "Invalid referral code! Please enter a valid referral code.";
         } else {
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $referralCode = strtoupper(substr(md5(uniqid($username, true)), 0, 8));
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role, status, referral_code, mobile, otp) VALUES (?, ?, ?, 'user', 'active', ?, '', '')");
+            // Check if email already exists
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->execute([$email]);
 
-            if ($stmt->execute([$username, $email, $hashedPassword, $referralCode])) {
-                // Redirect to login after successful registration
-                $_SESSION['success'] = "Registration successful! Please log in.";
-                header("Location: login.php");
-                exit;
+            if ($stmt->rowCount() > 0) {
+                $error = "Email is already registered!";
             } else {
-                $error = "Failed to register user. Please try again.";
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                $newReferralCode = strtoupper(substr(md5(uniqid($username, true)), 0, 8));
+                $referred_by_id = $referrer['id'];
+
+                $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role, status, referral_code, referred_by, mobile, otp) VALUES (?, ?, ?, 'user', 'active', ?, ?, '', '')");
+
+                if ($stmt->execute([$username, $email, $hashedPassword, $newReferralCode, $referred_by_id])) {
+                    $_SESSION['success'] = "Registration successful! Please log in.";
+                    header("Location: login.php");
+                    exit;
+                } else {
+                    $error = "Failed to register user. Please try again.";
+                }
             }
         }
     }
@@ -328,6 +342,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="form-group">
                     <label for="confirm_password">Confirm Password</label>
                     <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="referral_code">Referral Code <span style="color:#dc3545;">*</span></label>
+                    <input type="text" id="referral_code" name="referral_code" class="form-control" required
+                        placeholder="Enter referral code"
+                        value="<?php echo htmlspecialchars($_POST['referral_code'] ?? $ref_from_url); ?>">
+                    <small style="color:#6c757d;font-size:12px;">Referral code is mandatory to register.</small>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Sign Up</button>
