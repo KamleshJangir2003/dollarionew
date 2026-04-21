@@ -1049,9 +1049,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             <div class="faq-grid">
                 <div class="faq-item">
-                    <div class="faq-question">What is DollarRio?</div>
+                    <div class="faq-question">What is MBPAY?</div>
                     <div class="faq-answer">
-                        DollarRio is a leading cryptocurrency exchange platform that allows you to buy and sell USDT
+                        MBPAY is a leading cryptocurrency exchange platform that allows you to buy and sell USDT
                         with INR instantly. We provide a secure, fast, and user-friendly platform for all your crypto
                         trading needs with competitive rates and low fees.
                     </div>
@@ -1067,9 +1067,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <div class="faq-item">
-                    <div class="faq-question">What are the advantages of using DollarRio over your competitors?</div>
+                    <div class="faq-question">What are the advantages of using MBPAY over your competitors?</div>
                     <div class="faq-answer">
-                        DollarRio offers several advantages including instant transactions, industry-low fees (0.1%),
+                        MBPAY offers several advantages including instant transactions, industry-low fees (0.1%),
                         military-grade security, 24/7 customer support, and a user-friendly interface. We also provide
                         better liquidity and more competitive rates than most competitors.
                     </div>

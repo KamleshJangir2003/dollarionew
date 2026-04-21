@@ -1046,9 +1046,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             <div class="faq-grid">
                 <div class="faq-item">
-                    <div class="faq-question">What is DollarRio?</div>
+                    <div class="faq-question">What is MBPAY?</div>
                     <div class="faq-answer">
-                        DollarRio is a leading cryptocurrency exchange platform that allows you to buy and sell USDT
+                        MBPAY is a leading cryptocurrency exchange platform that allows you to buy and sell USDT
                         with INR instantly. We provide a secure, fast, and user-friendly platform for all your crypto
                         trading needs with competitive rates and low fees.
                     </div>
@@ -1064,9 +1064,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <div class="faq-item">
-                    <div class="faq-question">What are the advantages of using DollarRio over your competitors?</div>
+                    <div class="faq-question">What are the advantages of using MBPAY over your competitors?</div>
                     <div class="faq-answer">
-                        DollarRio offers several advantages including instant transactions, industry-low fees (0.1%),
+                        MBPAY offers several advantages including instant transactions, industry-low fees (0.1%),
                         military-grade security, 24/7 customer support, and a user-friendly interface. We also provide
                         better liquidity and more competitive rates than most competitors.
                     </div>
@@ -1088,8 +1088,8 @@ document.addEventListener('DOMContentLoaded', function () {
     <footer>
         <div class="footer-container">
             <div class="footer-column">
-                <h3>DollarRio</h3>
-                <p>support@dollario.in</p>
+                <h3>MBPAY</h3>
+                <p>support@mbpay.in</p>
                 <div class="social-links">
                     <a href="#"><i class="fab fa-twitter"></i></a>
                     <a href="#"><i class="fab fa-linkedin"></i></a>
@@ -1121,7 +1121,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="footer-logo">
                 <img src="uploads/Dollario-logo .svg" alt="DollarRio Logo">
             </div>
-            <p class="copyright">© 2025 DollarRio. All Rights Reserved.</p>
+            <p class="copyright">© 2026 MBPAY. All Rights Reserved.</p>
         </div>
     </footer>
 
@@ -1210,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', function () {
           { selector: '.price-ticker p', text: 'Current USDT/INR Price' },
           { selector: '.faq-title', text: 'Frequently Asked Questions' },
           { selector: '.newsletter-input button', text: 'Join' },
-          { selector: '.copyright', text: '© 2025 Dollario. All rights reserved.' },
+          { selector: '.copyright', text: '© 2026 MBPAY. All Rights Reserved.' },
         ]);
 
         const features = document.querySelectorAll('.feature-content');
