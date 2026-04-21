@@ -284,7 +284,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="left-section">
         <img src="../image/dollario-logo .svg" alt="HubPay Logo" class="logo">
         <div class="left-content">
-            <h1 class="left-title">Welcome Back to Dollario</h1>
+            <h1 class="left-title">Welcome Back to MBPAY</h1>
             <p class="left-subtitle">Log in and continue your crypto journey.</p>
         </div>
     </div>
