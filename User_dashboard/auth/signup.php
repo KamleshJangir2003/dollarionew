@@ -7,6 +7,7 @@ if (isset($_SESSION['user_id'], $_SESSION['role']) && $_SESSION['role'] === 'use
 }
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/transaction_mailer.php';
 
 // Handle signup form submission
 $success = '';
@@ -55,6 +56,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role, status, referral_code, referred_by, mobile, otp) VALUES (?, ?, ?, 'user', 'active', ?, ?, '', '')");
 
                 if ($stmt->execute([$username, $email, $hashedPassword, $newReferralCode, $referred_by_id])) {
+                    // Notify admin about new registration
+                    $refUserStmt = $pdo->prepare("SELECT username, referral_code FROM users WHERE id = ?");
+                    $refUserStmt->execute([$referred_by_id]);
+                    $refUser = $refUserStmt->fetch(PDO::FETCH_ASSOC);
+                    sendTransactionEmail('Sharmagopesh706@gmail.com', 'Admin', '👤 New User Registered - MBPAY', [
+                        'New Username'   => $username,
+                        'Email'          => $email,
+                        'Referral Code Used' => $ref_code_input,
+                        'Referred By'    => $refUser['username'] ?? 'N/A',
+                        'Registered On'  => date('d M Y, h:i A'),
+                    ]);
                     $_SESSION['success'] = "Registration successful! Please log in.";
                     header("Location: login.php");
                     exit;
