@@ -3,17 +3,13 @@ if (session_status() === PHP_SESSION_NONE) { session_name('admin_session'); sess
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: ../login.php"); exit();
 }
+require_once '../includes/db.php';
 ?>
 <?php include '../templates/sidebar.php'; ?>
 <?php include '../templates/header.php'; ?>
 <?php
-$host     = 'localhost';
-$dbname   = 'dollario_admin';
-$username = 'root';
-$password = '';
-
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     die("DB Error: " . $e->getMessage());
@@ -21,28 +17,31 @@ try {
 
 function getTransactions($pdo, $page = 1, $perPage = 5) {
     $offset = ($page - 1) * $perPage;
-    $stmt = $pdo->prepare("SELECT t.*, au.username FROM transactions t LEFT JOIN admin_users au ON t.user_id = au.id ORDER BY t.created_at DESC LIMIT :offset, :perPage");
-    $stmt->bindParam(':offset',  $offset,  PDO::PARAM_INT);
-    $stmt->bindParam(':perPage', $perPage, PDO::PARAM_INT);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $pdo->prepare("SELECT t.*, u.username FROM user_transactions t LEFT JOIN users u ON t.user_id = u.id ORDER BY t.created_at DESC LIMIT :offset, :perPage");
+        $stmt->bindParam(':offset',  $offset,  PDO::PARAM_INT);
+        $stmt->bindParam(':perPage', $perPage, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) { return []; }
 }
 function countTransactions($pdo) {
-    return $pdo->query("SELECT COUNT(*) FROM transactions")->fetchColumn();
+    try { return $pdo->query("SELECT COUNT(*) FROM user_transactions")->fetchColumn(); }
+    catch (Exception $e) { return 0; }
 }
 
-$stmt        = $pdo->query("SELECT COUNT(DISTINCT lh.user_id) as total_users FROM login_history lh JOIN admin_users au ON lh.user_id = au.id");
-$totalUsers  = $stmt->fetch(PDO::FETCH_ASSOC)['total_users'];
+$totalUsers = $pdo->query("SELECT COUNT(*) FROM admin_users")->fetchColumn();
 
 $currentPage       = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $transactions      = getTransactions($pdo, $currentPage);
 $totalTransactions = countTransactions($pdo);
-$totalPages        = ceil($totalTransactions / 5);
+$totalPages        = max(1, ceil($totalTransactions / 5));
 
-$pendingKycCount      = $pdo->query("SELECT COUNT(*) FROM kyc_documents WHERE status='pending'")->fetchColumn();
-$activeInvestmentCount = $pdo->query("SELECT COUNT(*) FROM investments WHERE status='active'")->fetchColumn();
+try { $pendingKycCount = $pdo->query("SELECT COUNT(*) FROM kyc_documents WHERE status='pending'")->fetchColumn(); }
+catch (Exception $e) { $pendingKycCount = 0; }
 
-$mysqli = new mysqli("localhost", "root", "", "dollario_admin");
+try { $activeInvestmentCount = $pdo->query("SELECT COUNT(*) FROM investments WHERE status='active'")->fetchColumn(); }
+catch (Exception $e) { $activeInvestmentCount = 0; }
 ?>
 
 <!DOCTYPE html>
@@ -364,8 +363,8 @@ $mysqli = new mysqli("localhost", "root", "", "dollario_admin");
         </thead>
         <tbody>
           <?php
-          if (!$mysqli->connect_error) {
-            $result = $mysqli->query("SELECT * FROM admin_users ORDER BY created_at DESC LIMIT 5");
+          if (!$conn->connect_error) {
+            $result = $conn->query("SELECT * FROM admin_users ORDER BY created_at DESC LIMIT 5");
             if ($result && $result->num_rows > 0) {
               while ($row = $result->fetch_assoc()) {
                 $uid   = "#USR" . str_pad($row['id'], 4, '0', STR_PAD_LEFT);
@@ -374,9 +373,10 @@ $mysqli = new mysqli("localhost", "root", "", "dollario_admin");
                 $joined = isset($row['created_at']) ? date('d M, h:i A', strtotime($row['created_at'])) : 'N/A';
                 $status = $row['status'] ?? 'Unknown';
                 $sc = '';
-                if (strtolower($status) === 'verified')     $sc = 'status-approved';
-                elseif (strtolower($status) === 'pending kyc') $sc = 'status-pending';
-                elseif (strtolower($status) === 'kyc rejected') $sc = 'status-rejected';
+                $sl = strtolower($status);
+                if ($sl === 'verified' || $sl === 'active')  $sc = 'status-approved';
+                elseif ($sl === 'pending' || $sl === 'pending kyc') $sc = 'status-pending';
+                elseif ($sl === 'rejected' || $sl === 'kyc rejected') $sc = 'status-rejected';
                 echo "<tr>
                   <td>$uid</td>
                   <td>$name</td>
@@ -427,24 +427,33 @@ $mysqli = new mysqli("localhost", "root", "", "dollario_admin");
         <tbody>
           <?php foreach ($transactions as $tx): ?>
           <tr>
-            <td><?= htmlspecialchars($tx['id']) ?></td>
-            <td><?= htmlspecialchars($tx['user_id']) ?></td>
-            <td><?= htmlspecialchars($tx['amount']) ?></td>
-            <td><?= htmlspecialchars($tx['type']) ?></td>
-            <td><span class="status-badge status-<?= strtolower($tx['status']) ?>"><?= htmlspecialchars($tx['status']) ?></span></td>
-            <td><?= date('d M, h:i A', strtotime($tx['created_at'])) ?></td>
+            <td>#TXN<?= str_pad($tx['id'], 5, '0', STR_PAD_LEFT) ?></td>
+            <td><?= htmlspecialchars($tx['username'] ?? 'User #'.$tx['user_id']) ?></td>
+            <td>
+              <?= $tx['currency'] === 'INR' ? '₹' : '' ?><?= number_format($tx['amount'], 2) ?><?= $tx['currency'] === 'USDT' ? ' USDT' : '' ?>
+            </td>
+            <td><?= ucfirst(htmlspecialchars($tx['type'])) ?></td>
+            <td><span class="status-badge status-<?= strtolower($tx['status'] ?? 'pending') ?>"><?= ucfirst(htmlspecialchars($tx['status'] ?? 'pending')) ?></span></td>
+            <td><?= isset($tx['created_at']) ? date('d M, h:i A', strtotime($tx['created_at'])) : 'N/A' ?></td>
             <td>
               <button class="adm-btn sm" onclick="viewTransaction('<?= $tx['id'] ?>')"><span class="material-icons-round" style="font-size:15px">visibility</span></button>
               <button class="adm-btn sm" onclick="downloadReceipt('<?= $tx['id'] ?>')"><span class="material-icons-round" style="font-size:15px">receipt</span></button>
             </td>
           </tr>
           <?php endforeach; ?>
+          <?php if (empty($transactions)): ?>
+          <tr><td colspan="7" style="text-align:center;color:#999;padding:20px">No transactions found.</td></tr>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>
     <div class="adm-pagination">
       <div class="adm-pagination-info">
-        Showing <?= (($currentPage-1)*5)+1 ?>–<?= min($currentPage*5, $totalTransactions) ?> of <?= $totalTransactions ?>
+        <?php if ($totalTransactions == 0): ?>
+          Showing 0 of 0
+        <?php else: ?>
+          Showing <?= (($currentPage-1)*5)+1 ?>–<?= min($currentPage*5, $totalTransactions) ?> of <?= $totalTransactions ?>
+        <?php endif; ?>
       </div>
       <div class="adm-pagination-controls">
         <?php if ($currentPage > 1): ?>
