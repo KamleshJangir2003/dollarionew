@@ -46,6 +46,47 @@ $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
     transform: translateY(-50%);
     color: #888; font-size: 13px;
   }
+  .adm-search-results {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px); left: 0;
+    width: 380px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+    z-index: 1100;
+    overflow: hidden;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+  .adm-search-results.show { display: block; }
+  .adm-sr-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f1f3f5;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .adm-sr-item:last-child { border-bottom: none; }
+  .adm-sr-item:hover { background: #f5f7fa; }
+  .adm-sr-left { display: flex; flex-direction: column; gap: 2px; }
+  .adm-sr-txnid { font-size: 13px; font-weight: 600; color: #1a2332; }
+  .adm-sr-user  { font-size: 11px; color: #888; }
+  .adm-sr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .adm-sr-amount { font-size: 13px; font-weight: 600; color: #1a73e8; }
+  .adm-sr-badge {
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px;
+  }
+  .adm-sr-badge.completed, .adm-sr-badge.approved { background:#e6f4ea; color:#1e8e3e; }
+  .adm-sr-badge.pending   { background:#fef3e2; color:#e37400; }
+  .adm-sr-badge.rejected  { background:#fce8e6; color:#c5221f; }
+  .adm-sr-empty { padding: 16px; text-align: center; color: #999; font-size: 13px; }
+  .adm-sr-loading { padding: 14px; text-align: center; color: #888; font-size: 13px; }
 
   .adm-header-right {
     display: flex;
@@ -140,8 +181,9 @@ $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
 <div class="adm-header">
   <button class="adm-hamburger" id="admHdrMenuBtn">☰</button>
   <div class="adm-search">
-    <input type="text" placeholder="Search users, transactions…">
+    <input type="text" id="admSearchInput" placeholder="Search transactions…" autocomplete="off">
     <i class="fas fa-search"></i>
+    <div class="adm-search-results" id="admSearchResults"></div>
   </div>
 
   <div class="adm-header-right">
@@ -204,6 +246,50 @@ $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
     document.addEventListener('click', function () {
       notifDrop.style.display = 'none';
       dropMenu.classList.remove('show');
+      document.getElementById('admSearchResults').classList.remove('show');
     });
   })();
+</script>
+
+<script>
+(function(){
+  var input   = document.getElementById('admSearchInput');
+  var results = document.getElementById('admSearchResults');
+  var timer;
+
+  input.addEventListener('input', function(){
+    clearTimeout(timer);
+    var q = this.value.trim();
+    if (q.length < 2) { results.classList.remove('show'); return; }
+    results.innerHTML = '<div class="adm-sr-loading">Searching…</div>';
+    results.classList.add('show');
+    timer = setTimeout(function(){
+      fetch('/dollario-new/admin/api/search_transactions.php?q=' + encodeURIComponent(q))
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if (!data.length) {
+            results.innerHTML = '<div class="adm-sr-empty">No transactions found</div>';
+            return;
+          }
+          results.innerHTML = data.map(function(t){
+            var sc = t.status.toLowerCase();
+            return '<a class="adm-sr-item" href="/dollario-new/admin/modules/transaction_reports.php?search=' + encodeURIComponent(t.txn_id) + '">'
+              + '<div class="adm-sr-left">'
+              + '<span class="adm-sr-txnid">' + t.txn_id + ' &bull; ' + t.type + '</span>'
+              + '<span class="adm-sr-user">' + t.username + ' &bull; ' + t.date + '</span>'
+              + '</div>'
+              + '<div class="adm-sr-right">'
+              + '<span class="adm-sr-amount">' + t.amount + '</span>'
+              + '<span class="adm-sr-badge ' + sc + '">' + t.status + '</span>'
+              + '</div>'
+              + '</a>';
+          }).join('');
+        })
+        .catch(function(){ results.innerHTML = '<div class="adm-sr-empty">Error fetching results</div>'; });
+    }, 300);
+  });
+
+  input.addEventListener('click', function(e){ e.stopPropagation(); });
+  results.addEventListener('click', function(e){ e.stopPropagation(); });
+})();
 </script>
