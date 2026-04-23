@@ -80,15 +80,16 @@ $sellLabel2 = getAdminSetting($conn, 'usdt_sell_label_2', 'Premium Rate');
         }
 
         .sidebar-header img {
-            width: 150px;
-            height: 210px;
-            margin-top: -70px;
+            width: 130px;
+            height: auto;
+            margin-top: 0;
         }
 
         .nav-links {
             display: flex;
             gap: 2rem;
-            margin-top: -65px;
+            margin-top: 0;
+            align-items: center;
         }
 
         .rupeee img {
@@ -114,7 +115,7 @@ $sellLabel2 = getAdminSetting($conn, 'usdt_sell_label_2', 'Premium Rate');
             border: none;
             color: white;
             font-size: 1.5rem;
-            margin-top: 30px;
+            margin-top: 0;
         }
 
         /* Hero Section */
@@ -843,7 +844,7 @@ $sellLabel2 = getAdminSetting($conn, 'usdt_sell_label_2', 'Premium Rate');
     <header>
         <nav class="nav-container">
             <div class="sidebar-header">
-                <img src="User_dashboard/image/Dollario-logo .svg" alt="Logo">
+                <img src="User_dashboard/image/logo.png" alt="Logo">
             </div>
             <div class="nav-links">
                 <a href="#"><i class="fas fa-exchange-alt"></i> Trade</a>
@@ -1185,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         <div class="footer-bottom">
             <div class="footer-logo">
-                <img src="User_dashboard/image/Dollario-logo .svg" alt="DollarRio Logo">
+                <img src="User_dashboard/image/logo.png" alt="MBPAY Logo">
             </div>
             <p class="copyright">© 2026 MBPAY. All Rights Reserved.</p>
         </div>
@@ -1215,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', function () {
           { selector: '.price-ticker p', text: 'वर्तमान USDT/INR मूल्य' },
           { selector: '.faq-title', text: 'सामान्य प्रश्न' },
           { selector: '.newsletter-input button', text: 'जुड़ें' },
-          { selector: '.copyright', text: '© 2025 डॉलररियो. सर्वाधिकार सुरक्षित।' },
+          { selector: '.copyright', text: '© 2026 MBPAY. सर्वाधिकार सुरक्षित।' },
         ]);
 
         const features = document.querySelectorAll('.feature-content');
@@ -1236,8 +1237,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const faqQ = document.querySelectorAll('.faq-question');
         const faqA = document.querySelectorAll('.faq-answer');
         if (faqQ.length >= 4 && faqA.length >= 4) {
-          faqQ[0].textContent = 'डॉलररियो क्या है?';
-          faqA[0].textContent = 'डॉलररियो INR के साथ USDT को तुरंत खरीदने और बेचने का प्लेटफॉर्म है।';
+          faqQ[0].textContent = 'MBPAY क्या है?';
+          faqA[0].textContent = 'MBPAY INR के साथ USDT को तुरंत खरीदने और बेचने का प्लेटफॉर्म है।';
 
           faqQ[1].textContent = 'मैं खाता कैसे बनाऊं?';
           faqA[1].textContent = "बस 'शुरू करें' पर क्लिक करें, रजिस्ट्रेशन फॉर्म भरें और वेरिफिकेशन पूरा करें।";
@@ -1251,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const footers = document.querySelectorAll('.footer-column');
         if (footers.length >= 3) {
-          footers[0].querySelector('h3').textContent = 'डॉलररियो';
+          footers[0].querySelector('h3').textContent = 'MBPAY';
           footers[1].querySelector('h3').textContent = 'कानूनी';
           const links = footers[1].querySelectorAll('li a');
           if (links.length >= 2) {
@@ -1297,8 +1298,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const faqQ = document.querySelectorAll('.faq-question');
         const faqA = document.querySelectorAll('.faq-answer');
         if (faqQ.length >= 4 && faqA.length >= 4) {
-          faqQ[0].textContent = 'What is Dollario?';
-          faqA[0].textContent = 'Dollario is a platform to instantly buy and sell USDT with INR.';
+          faqQ[0].textContent = 'What is MBPAY?';
+          faqA[0].textContent = 'MBPAY is a platform to instantly buy and sell USDT with INR.';
 
           faqQ[1].textContent = 'How do I create an account?';
           faqA[1].textContent = "Just click on 'Get Started', fill out the registration form, and complete verification.";
@@ -1312,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const footers = document.querySelectorAll('.footer-column');
         if (footers.length >= 3) {
-          footers[0].querySelector('h3').textContent = 'Dollario';
+          footers[0].querySelector('h3').textContent = 'MBPAY';
           footers[1].querySelector('h3').textContent = 'Legal';
           const links = footers[1].querySelectorAll('li a');
           if (links.length >= 2) {
