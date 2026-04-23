@@ -158,6 +158,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     .price-option:hover { border-color: #f59e0b; }
     .price-option.selected { border-color: #f59e0b; background: #fffbeb; }
+    .price-option:nth-child(2):hover { border-color: #22c55e; }
+    .price-option:nth-child(2) { background: #f0fdf4; border-color: #bbf7d0; }
+    .price-option:nth-child(2).selected { border-color: #22c55e; background: #dcfce7; }
+    .price-option:nth-child(2) .opt-label { color: #166534; }
+    .price-option:nth-child(2) .opt-price { color: #15803d; }
     .price-option .opt-label { font-size: 0.78rem; color: #64748b; margin-bottom: 4px; }
     .price-option .opt-price { font-size: 1.1rem; font-weight: 700; color: #1e293b; }
     label { font-size: 0.85rem; font-weight: 600; color: #374151; display: block; margin-bottom: 6px; }
