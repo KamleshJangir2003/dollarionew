@@ -127,19 +127,49 @@ foreach (['TRC20','ERC20','BEP20'] as $net) {
     .adm-card-title { font-size: 15px; font-weight: 700; color: #1a2332; }
     .adm-card-desc  { font-size: 12px; color: #888; margin-top: 3px; }
 
-    /* Form */
-    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-    .field { display: flex; flex-direction: column; gap: 6px; }
-    .field label {
-      font-size: 11px; font-weight: 700; color: #64748b;
+    /* Price option boxes */
+    .price-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .price-option-box {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      background: #fafbfc;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .price-option-box:hover { border-color: #1a73e8; box-shadow: 0 2px 10px rgba(26,115,232,0.08); }
+    .price-option-box .opt-number {
+      font-size: 11px; font-weight: 700; color: #1a73e8;
       text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 5px;
+    }
+    .price-option-box .opt-number span {
+      background: #e8f0fe; color: #1a73e8;
+      width: 20px; height: 20px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+    .field:last-child { margin-bottom: 0; }
+    .field label {
+      font-size: 11px; font-weight: 600; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.4px;
     }
     .field input {
-      padding: 10px 13px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+      padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px;
       font-size: 13px; color: #1e293b; outline: none;
-      transition: border 0.2s, box-shadow 0.2s; background: #fafbfc; width: 100%;
+      transition: border 0.2s, box-shadow 0.2s; background: #fff; width: 100%;
     }
-    .field input:focus { border-color: #1a73e8; background: #fff; box-shadow: 0 0 0 3px rgba(26,115,232,0.08); }
+    .field input:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.08); }
+    .price-display {
+      font-size: 22px; font-weight: 800; color: #1a2332;
+      margin-top: 4px; display: flex; align-items: baseline; gap: 3px;
+    }
+    .price-display .currency { font-size: 14px; font-weight: 600; color: #64748b; }
 
     .adm-btn {
       padding: 10px 22px; border-radius: 8px; border: 1.5px solid #ddd;
@@ -153,6 +183,7 @@ foreach (['TRC20','ERC20','BEP20'] as $net) {
       box-shadow: 0 2px 8px rgba(26,35,50,0.15);
     }
     .adm-btn.primary:hover { background: #2d3f55; box-shadow: 0 4px 12px rgba(26,35,50,0.2); }
+    .adm-btn.sm { padding: 7px 14px; font-size: 12px; }
 
     /* QR items */
     .qr-item {
@@ -177,8 +208,7 @@ foreach (['TRC20','ERC20','BEP20'] as $net) {
     }
     .qr-preview {
       width: 90px; height: 90px; border-radius: 8px;
-      border: 1.5px solid #e2e8f0; overflow: hidden;
-      background: #fff;
+      border: 1.5px solid #e2e8f0; overflow: hidden; background: #fff;
     }
     .qr-preview img { width: 100%; height: 100%; object-fit: contain; }
     .qr-placeholder {
@@ -198,7 +228,7 @@ foreach (['TRC20','ERC20','BEP20'] as $net) {
     @media (max-width: 900px) { .adm-cards-grid { grid-template-columns: 1fr; } }
     @media (max-width: 768px) {
       .adm-page { margin-left: 0; padding: 12px; }
-      .field-grid { grid-template-columns: 1fr; }
+      .price-options-grid { grid-template-columns: 1fr; }
       .qr-item { flex-direction: column; align-items: flex-start; }
     }
   </style>
@@ -233,28 +263,54 @@ foreach (['TRC20','ERC20','BEP20'] as $net) {
         </div>
       </div>
       <form method="POST">
-        <div class="field-grid">
-          <div class="field">
-            <label>Option 1 Label</label>
-            <input type="text" name="sell_label_1" value="<?= htmlspecialchars($sellLabel1) ?>" required placeholder="e.g., Mixed Fund">
+        <div class="price-options-grid">
+
+          <!-- Option 1 -->
+          <div class="price-option-box">
+            <div class="opt-number"><span>1</span> Option 1</div>
+            <div class="field">
+              <label>Label</label>
+              <input type="text" name="sell_label_1" value="<?= htmlspecialchars($sellLabel1) ?>" required placeholder="e.g., Mixed Fund">
+            </div>
+            <div class="field">
+              <label>Price (₹ per USDT)</label>
+              <input type="number" name="sell_price_1" step="0.01" min="0.01" value="<?= $sellRate1 ?>" required placeholder="89.80">
+            </div>
+            <div class="price-display">
+              <span class="currency">₹</span>
+              <span id="preview1"><?= $sellRate1 ?></span>
+              <span class="currency">/ USDT</span>
+            </div>
           </div>
-          <div class="field">
-            <label>Option 2 Label</label>
-            <input type="text" name="sell_label_2" value="<?= htmlspecialchars($sellLabel2) ?>" required placeholder="e.g., Premium Rate">
+
+          <!-- Option 2 -->
+          <div class="price-option-box">
+            <div class="opt-number"><span>2</span> Option 2</div>
+            <div class="field">
+              <label>Label</label>
+              <input type="text" name="sell_label_2" value="<?= htmlspecialchars($sellLabel2) ?>" required placeholder="e.g., Premium Rate">
+            </div>
+            <div class="field">
+              <label>Price (₹ per USDT)</label>
+              <input type="number" name="sell_price_2" step="0.01" min="0.01" value="<?= $sellRate2 ?>" required placeholder="90.00">
+            </div>
+            <div class="price-display">
+              <span class="currency">₹</span>
+              <span id="preview2"><?= $sellRate2 ?></span>
+              <span class="currency">/ USDT</span>
+            </div>
           </div>
-          <div class="field">
-            <label>Price 1 (₹ per USDT)</label>
-            <input type="number" name="sell_price_1" step="0.01" min="0.01" value="<?= $sellRate1 ?>" required placeholder="89.80">
-          </div>
-          <div class="field">
-            <label>Price 2 (₹ per USDT)</label>
-            <input type="number" name="sell_price_2" step="0.01" min="0.01" value="<?= $sellRate2 ?>" required placeholder="90.00">
-          </div>
+
         </div>
         <button type="submit" class="adm-btn primary">
           <i class="fas fa-save"></i> Update Sell Prices
         </button>
       </form>
+
+      <script>
+        document.querySelector('[name="sell_price_1"]').addEventListener('input', function(){ document.getElementById('preview1').textContent = this.value || '0'; });
+        document.querySelector('[name="sell_price_2"]').addEventListener('input', function(){ document.getElementById('preview2').textContent = this.value || '0'; });
+      </script>
     </div>
 
     <!-- QR Code Card -->
