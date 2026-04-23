@@ -74,140 +74,225 @@ foreach (['TRC20','ERC20','BEP20'] as $net) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>USDT Rate Management</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <title>USDT Rate Management - Admin</title>
+  <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', sans-serif; }
-    body { background: #f4f6f9; min-height: 100vh; }
-    .content-area { margin-left: 250px; padding: 24px; }
-    .page-header { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 16px; padding: 24px 32px; margin-bottom: 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
-    .page-title { display: flex; align-items: center; gap: 12px; font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .page-title .material-icons { font-size: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; }
-    .card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); padding: 32px; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.3); }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 48px rgba(0,0,0,0.15); }
-    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #f0f0f0; }
-    .card-title { font-size: 20px; font-weight: 700; color: #1a202c; }
-    .card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-    .icon-sell { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff; }
-    .icon-qr { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff; }
-    .card-desc { font-size: 14px; color: #718096; margin-bottom: 24px; line-height: 1.6; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
-    .form-group { position: relative; }
-    label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
-    input[type="number"], input[type="text"] { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.3s ease; background: #fff; }
-    input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 4px rgba(102,126,234,0.1); transform: translateY(-2px); }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 28px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102,126,234,0.4); }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.6); }
-    .btn:active { transform: translateY(0); }
-    .alert { padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; }
-    .alert.success { background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); color: #155724; border: none; }
-    .alert.error { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #721c24; border: none; }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    .qr-item { background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: all 0.3s ease; border: 2px solid transparent; }
-    .qr-item:hover { border-color: #667eea; transform: translateX(4px); }
-    .qr-header { font-weight: 700; color: #2d3748; margin-bottom: 16px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
-    .qr-preview { width: 140px; height: 140px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .qr-preview img { width: 100%; height: 100%; object-fit: contain; border-radius: 12px; }
-    .qr-placeholder { width: 140px; height: 140px; background: linear-gradient(135deg, #e0e7ff 0%, #cffafe 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
-    .qr-upload-form { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    input[type="file"] { flex: 1; min-width: 200px; padding: 10px; border: 2px dashed #cbd5e0; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease; }
-    input[type="file"]:hover { border-color: #667eea; background: #f7fafc; }
-    .btn-upload { padding: 10px 20px; font-size: 14px; }
-    @media (max-width: 1200px) { .cards-grid { grid-template-columns: 1fr; } }
-    @media (max-width: 768px) { .content-area { margin-left: 0; padding: 20px; } .form-row { grid-template-columns: 1fr; } .page-title { font-size: 22px; } }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; }
+
+    .adm-page { margin-left: 250px; padding: 24px; min-height: 100vh; }
+
+    .adm-page-title {
+      font-size: 1.3rem; font-weight: 700; margin-bottom: 20px;
+      color: #1a2332; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* Alert */
+    .adm-alert {
+      padding: 11px 16px; border-radius: 8px; font-size: 13px;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+    }
+    .adm-alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .adm-alert-error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* Cards grid */
+    .adm-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .adm-table-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      padding: 24px;
+      border: 1px solid #e8ecf0;
+    }
+
+    .adm-card-head {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 20px; padding-bottom: 16px;
+      border-bottom: 1px solid #f1f3f5;
+    }
+    .adm-card-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .icon-orange { background: #fef3e2; color: #e37400; }
+    .icon-blue   { background: #e8f0fe; color: #1a73e8; }
+    .adm-card-title { font-size: 15px; font-weight: 700; color: #1a2332; }
+    .adm-card-desc  { font-size: 12px; color: #888; margin-top: 3px; }
+
+    /* Form */
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 11px; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .field input {
+      padding: 10px 13px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+      font-size: 13px; color: #1e293b; outline: none;
+      transition: border 0.2s, box-shadow 0.2s; background: #fafbfc; width: 100%;
+    }
+    .field input:focus { border-color: #1a73e8; background: #fff; box-shadow: 0 0 0 3px rgba(26,115,232,0.08); }
+
+    .adm-btn {
+      padding: 10px 22px; border-radius: 8px; border: 1.5px solid #ddd;
+      background: #fff; cursor: pointer; font-size: 13px;
+      display: inline-flex; align-items: center; gap: 7px;
+      transition: all 0.2s; font-weight: 600;
+    }
+    .adm-btn:hover { background: #f5f5f5; }
+    .adm-btn.primary {
+      background: #1a2332; color: #fff; border-color: #1a2332;
+      box-shadow: 0 2px 8px rgba(26,35,50,0.15);
+    }
+    .adm-btn.primary:hover { background: #2d3f55; box-shadow: 0 4px 12px rgba(26,35,50,0.2); }
+
+    /* QR items */
+    .qr-item {
+      background: #f8f9fb; border-radius: 10px; padding: 16px;
+      margin-bottom: 12px; border: 1.5px solid #edf0f4;
+      display: flex; align-items: center; gap: 16px;
+      transition: border-color 0.2s;
+    }
+    .qr-item:hover { border-color: #1a73e8; }
+    .qr-item:last-child { margin-bottom: 0; }
+    .qr-item-left { flex-shrink: 0; }
+    .qr-item-right { flex: 1; min-width: 0; }
+    .qr-item-head {
+      font-size: 13px; font-weight: 700; color: #1a2332;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .qr-network-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #e8f0fe; color: #1a73e8;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+    }
+    .qr-preview {
+      width: 90px; height: 90px; border-radius: 8px;
+      border: 1.5px solid #e2e8f0; overflow: hidden;
+      background: #fff;
+    }
+    .qr-preview img { width: 100%; height: 100%; object-fit: contain; }
+    .qr-placeholder {
+      width: 90px; height: 90px; background: #e8f0fe;
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; color: #1a73e8;
+    }
+    .qr-upload-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+    .qr-upload-row input[type="file"] {
+      flex: 1; min-width: 140px; padding: 7px 10px;
+      border: 1.5px dashed #cbd5e0; border-radius: 7px;
+      font-size: 12px; cursor: pointer; background: #fff;
+      transition: border-color 0.2s;
+    }
+    .qr-upload-row input[type="file"]:hover { border-color: #1a73e8; }
+
+    @media (max-width: 900px) { .adm-cards-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .adm-page { margin-left: 0; padding: 12px; }
+      .field-grid { grid-template-columns: 1fr; }
+      .qr-item { flex-direction: column; align-items: flex-start; }
+    }
   </style>
 </head>
 <body>
-<div class="content-area">
-  <div class="page-header">
-    <div class="page-title">
-      <span class="material-icons">currency_exchange</span>
-      USDT Rate Management
-    </div>
-    <?php if ($msg === 'sell_success'): ?>
-      <div class="alert success" style="margin-top:16px;margin-bottom:0;"><span class="material-icons">check_circle</span> Sell prices updated successfully.</div>
-    <?php elseif ($msg === 'sell_error'): ?>
-      <div class="alert error" style="margin-top:16px;margin-bottom:0;"><span class="material-icons">error</span> Both sell prices must be greater than 0.</div>
-    <?php elseif ($msg === 'qr_success'): ?>
-      <div class="alert success" style="margin-top:16px;margin-bottom:0;"><span class="material-icons">check_circle</span> QR code updated successfully.</div>
-    <?php elseif ($msg === 'qr_error'): ?>
-      <div class="alert error" style="margin-top:16px;margin-bottom:0;"><span class="material-icons">error</span> Invalid file. Only JPG, PNG, GIF, WEBP allowed.</div>
-    <?php endif; ?>
+
+<div class="adm-page">
+
+  <div class="adm-page-title">
+    <i class="fas fa-exchange-alt"></i> USDT Rate Management
   </div>
 
-  <div class="cards-grid">
-  <!-- Sell Price Management -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-icon icon-sell">
-        <span class="material-icons">sell</span>
-      </div>
-      <div class="card-title">USDT Sell Price Options</div>
-    </div>
-    <p class="card-desc">Configure two different selling rates for users to choose from when selling USDT.</p>
-    <form method="POST">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Option 1 Label</label>
-          <input type="text" name="sell_label_1" value="<?= htmlspecialchars($sellLabel1) ?>" required placeholder="e.g., Mixed Fund">
-        </div>
-        <div class="form-group">
-          <label>Option 2 Label</label>
-          <input type="text" name="sell_label_2" value="<?= htmlspecialchars($sellLabel2) ?>" required placeholder="e.g., Premium Rate">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Price 1 (₹ per USDT)</label>
-          <input type="number" name="sell_price_1" step="0.01" min="0.01" value="<?= $sellRate1 ?>" required placeholder="89.80">
-        </div>
-        <div class="form-group">
-          <label>Price 2 (₹ per USDT)</label>
-          <input type="number" name="sell_price_2" step="0.01" min="0.01" value="<?= $sellRate2 ?>" required placeholder="90.00">
-        </div>
-      </div>
-      <button type="submit" class="btn">
-        <span class="material-icons" style="font-size:20px;">save</span> Update Sell Prices
-      </button>
-    </form>
-  </div>
+  <?php if ($msg === 'sell_success'): ?>
+    <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> Sell prices updated successfully.</div>
+  <?php elseif ($msg === 'sell_error'): ?>
+    <div class="adm-alert adm-alert-error"><i class="fas fa-exclamation-circle"></i> Both sell prices must be greater than 0.</div>
+  <?php elseif ($msg === 'qr_success'): ?>
+    <div class="adm-alert adm-alert-success"><i class="fas fa-check-circle"></i> QR code updated successfully.</div>
+  <?php elseif ($msg === 'qr_error'): ?>
+    <div class="adm-alert adm-alert-error"><i class="fas fa-exclamation-circle"></i> Invalid file. Only JPG, PNG, GIF, WEBP allowed.</div>
+  <?php endif; ?>
 
-  <!-- QR Code Management -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-icon icon-qr">
-        <span class="material-icons">qr_code_2</span>
-      </div>
-      <div class="card-title">USDT Deposit QR Codes</div>
-    </div>
-    <p class="card-desc">Upload QR codes for different blockchain networks to receive USDT deposits.</p>
-    <?php foreach (['TRC20','ERC20','BEP20'] as $net): ?>
-    <div class="qr-item">
-      <div class="qr-header">
-        <span class="material-icons" style="font-size:20px;color:#667eea;">account_balance_wallet</span>
-        <?= $net ?> Network
-      </div>
-      <?php if ($qrImages[$net]): ?>
-        <div class="qr-preview">
-          <img src="../uploads/<?= htmlspecialchars($qrImages[$net]) ?>" alt="<?= $net ?> QR">
+  <div class="adm-cards-grid">
+
+    <!-- Sell Price Card -->
+    <div class="adm-table-card">
+      <div class="adm-card-head">
+        <div class="adm-card-icon icon-orange"><i class="fas fa-tag"></i></div>
+        <div>
+          <div class="adm-card-title">USDT Sell Price Options</div>
+          <div class="adm-card-desc">Set two selling rates for users to choose from</div>
         </div>
-      <?php else: ?>
-        <div class="qr-placeholder">
-          <span class="material-icons" style="font-size:48px;opacity:0.3;">qr_code</span>
+      </div>
+      <form method="POST">
+        <div class="field-grid">
+          <div class="field">
+            <label>Option 1 Label</label>
+            <input type="text" name="sell_label_1" value="<?= htmlspecialchars($sellLabel1) ?>" required placeholder="e.g., Mixed Fund">
+          </div>
+          <div class="field">
+            <label>Option 2 Label</label>
+            <input type="text" name="sell_label_2" value="<?= htmlspecialchars($sellLabel2) ?>" required placeholder="e.g., Premium Rate">
+          </div>
+          <div class="field">
+            <label>Price 1 (₹ per USDT)</label>
+            <input type="number" name="sell_price_1" step="0.01" min="0.01" value="<?= $sellRate1 ?>" required placeholder="89.80">
+          </div>
+          <div class="field">
+            <label>Price 2 (₹ per USDT)</label>
+            <input type="number" name="sell_price_2" step="0.01" min="0.01" value="<?= $sellRate2 ?>" required placeholder="90.00">
+          </div>
         </div>
-      <?php endif; ?>
-      <form method="POST" enctype="multipart/form-data" class="qr-upload-form">
-        <input type="hidden" name="qr_network" value="<?= $net ?>">
-        <input type="file" name="qr_image" accept="image/*" required>
-        <button type="submit" class="btn btn-upload">
-          <span class="material-icons" style="font-size:18px;">upload</span> Upload
+        <button type="submit" class="adm-btn primary">
+          <i class="fas fa-save"></i> Update Sell Prices
         </button>
       </form>
     </div>
-    <?php endforeach; ?>
-  </div>
-  </div>
+
+    <!-- QR Code Card -->
+    <div class="adm-table-card">
+      <div class="adm-card-head">
+        <div class="adm-card-icon icon-blue"><i class="fas fa-qrcode"></i></div>
+        <div>
+          <div class="adm-card-title">USDT Deposit QR Codes</div>
+          <div class="adm-card-desc">Upload QR codes for each blockchain network</div>
+        </div>
+      </div>
+      <?php foreach (['TRC20','ERC20','BEP20'] as $net): ?>
+      <div class="qr-item">
+        <div class="qr-item-left">
+          <?php if ($qrImages[$net]): ?>
+            <div class="qr-preview">
+              <img src="../uploads/<?= htmlspecialchars($qrImages[$net]) ?>" alt="<?= $net ?> QR">
+            </div>
+          <?php else: ?>
+            <div class="qr-placeholder"><i class="fas fa-qrcode" style="font-size:36px;opacity:0.4;"></i></div>
+          <?php endif; ?>
+        </div>
+        <div class="qr-item-right">
+          <div class="qr-item-head">
+            <span class="qr-network-badge"><i class="fas fa-wallet"></i> <?= $net ?></span>
+          </div>
+          <form method="POST" enctype="multipart/form-data" class="qr-upload-row">
+            <input type="hidden" name="qr_network" value="<?= $net ?>">
+            <input type="file" name="qr_image" accept="image/*" required>
+            <button type="submit" class="adm-btn primary">
+              <i class="fas fa-upload"></i> Upload
+            </button>
+          </form>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+
   </div>
 </div>
 </body>
