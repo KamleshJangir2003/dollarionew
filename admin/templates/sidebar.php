@@ -81,25 +81,17 @@
   .adm-menu li a .material-icons { font-size: 19px; flex-shrink: 0; }
 
   @media (max-width: 768px) {
-    .adm-topbar { display: flex; }
     .adm-sidebar { transform: translateX(-100%); }
     .adm-sidebar.active { transform: translateX(0); }
   }
 
   @media (min-width: 769px) {
-    .adm-topbar { display: none !important; }
     .adm-sidebar { transform: translateX(0) !important; }
   }
 </style>
 
 <!-- Overlay -->
 <div class="adm-overlay" id="admOverlay"></div>
-
-<!-- Mobile Topbar -->
-<div class="adm-topbar">
-  <img src="/dollario-new/User_dashboard/image/logo.png" alt="Dollario">
-  <button class="adm-menu-btn" id="admMenuBtn">☰</button>
-</div>
 
 <!-- Sidebar -->
 <div class="adm-sidebar" id="admSidebar">
@@ -139,14 +131,12 @@
 
 <script>
   (function () {
-    var btn     = document.getElementById('admMenuBtn');
     var sidebar = document.getElementById('admSidebar');
     var overlay = document.getElementById('admOverlay');
     function toggle() {
       sidebar.classList.toggle('active');
       overlay.classList.toggle('active');
     }
-    if (btn)     btn.addEventListener('click', toggle);
     if (overlay) overlay.addEventListener('click', toggle);
   })();
 </script>

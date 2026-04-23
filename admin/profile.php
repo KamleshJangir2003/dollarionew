@@ -57,9 +57,9 @@ $profile_picture = $_SESSION['profile_picture'] ?? '';
             font-size: 38px; color: #7a8fa6;
         }
 
-        .hero-info { flex: 1; }
-        .hero-info h2 { color: #fff; font-size: 22px; margin: 0 0 4px; font-weight: 600; }
-        .hero-info p  { color: #7a8fa6; font-size: 13px; margin: 0 0 3px; }
+        .hero-info { flex: 1; min-width: 0; }
+        .hero-info h2 { color: #fff; font-size: 22px; margin: 0 0 4px; font-weight: 600; word-break: break-word; }
+        .hero-info p  { color: #7a8fa6; font-size: 13px; margin: 0 0 3px; word-break: break-all; }
         .hero-badge {
             display: inline-flex; align-items: center; gap: 5px;
             background: rgba(255,255,255,0.08);
@@ -72,14 +72,16 @@ $profile_picture = $_SESSION['profile_picture'] ?? '';
             display: flex; gap: 4px;
             background: #f1f3f6; border-radius: 10px;
             padding: 4px; margin-bottom: 24px;
-            width: fit-content;
+            width: 100%;
         }
         .ptab {
-            padding: 8px 20px; border-radius: 8px;
+            flex: 1;
+            padding: 8px 12px; border-radius: 8px;
             font-size: 13px; font-weight: 500;
             cursor: pointer; color: #64748b;
             transition: all 0.2s; border: none; background: none;
-            display: flex; align-items: center; gap: 6px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            white-space: nowrap;
         }
         .ptab.active { background: #fff; color: #0e1a2b; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
@@ -101,7 +103,6 @@ $profile_picture = $_SESSION['profile_picture'] ?? '';
         .form-card h3 i { color: #36465d; font-size: 18px; }
 
         .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        @media(max-width: 600px) { .field-grid { grid-template-columns: 1fr; } }
 
         .field { display: flex; flex-direction: column; gap: 5px; }
         .field label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; }
@@ -112,6 +113,7 @@ $profile_picture = $_SESSION['profile_picture'] ?? '';
             font-size: 14px; color: #1e293b;
             outline: none; transition: border 0.2s;
             background: #fafbfc;
+            width: 100%;
         }
         .field input:focus { border-color: #36465d; background: #fff; }
 
@@ -139,9 +141,24 @@ $profile_picture = $_SESSION['profile_picture'] ?? '';
         .strength-bar { height: 4px; border-radius: 4px; background: #e2e8f0; margin-top: 6px; overflow: hidden; }
         .strength-fill { height: 100%; border-radius: 4px; transition: width 0.3s, background 0.3s; width: 0; }
 
-        @media(max-width: 768px) {
-            .profile-hero { flex-direction: column; text-align: center; }
+        /* Mobile */
+        @media(max-width: 480px) {
+            .profile-page { padding: 12px; }
+            .profile-hero { flex-direction: column; text-align: center; padding: 20px 16px; gap: 16px; }
+            .hero-info h2 { font-size: 18px; }
+            .form-card { padding: 16px; }
+            .field-grid { grid-template-columns: 1fr; }
+            .save-btn { width: 100%; justify-content: center; }
+            .ptab { font-size: 12px; padding: 8px 6px; gap: 4px; }
+            .ptab i { font-size: 12px; }
+        }
+
+        /* Tablet */
+        @media(min-width: 481px) and (max-width: 768px) {
+            .profile-hero { flex-direction: column; text-align: center; padding: 24px 20px; }
             .profile-page { padding: 16px; }
+            .field-grid { grid-template-columns: 1fr; }
+            .save-btn { width: 100%; justify-content: center; }
         }
     </style>
 </head>

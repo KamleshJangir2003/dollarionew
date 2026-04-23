@@ -115,16 +115,30 @@ $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
   }
   .adm-drop-menu a:hover { background: #f5f5f5; }
 
+  .adm-hamburger {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    padding: 4px 6px;
+    line-height: 1;
+  }
+
   @media (max-width: 768px) {
     .adm-header {
       margin-left: 0;
-      padding: 0 14px;
+      padding: 0 12px;
+      gap: 10px;
     }
     .adm-search { display: none; }
+    .adm-hamburger { display: block; }
   }
 </style>
 
 <div class="adm-header">
+  <button class="adm-hamburger" id="admHdrMenuBtn">☰</button>
   <div class="adm-search">
     <input type="text" placeholder="Search users, transactions…">
     <i class="fas fa-search"></i>
@@ -162,6 +176,17 @@ $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
     var notifDrop = document.getElementById('admNotifDrop');
     var userBtn   = document.getElementById('admUserBtn');
     var dropMenu  = document.getElementById('admDropMenu');
+    var hdrMenuBtn = document.getElementById('admHdrMenuBtn');
+
+    if (hdrMenuBtn) {
+      hdrMenuBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var sidebar = document.getElementById('admSidebar');
+        var overlay = document.getElementById('admOverlay');
+        if (sidebar) sidebar.classList.toggle('active');
+        if (overlay) overlay.classList.toggle('active');
+      });
+    }
 
     notifBtn.addEventListener('click', function (e) {
       e.stopPropagation();
