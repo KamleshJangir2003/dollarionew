@@ -1,12 +1,15 @@
 <?php
-$pageTitle = "DollaRio - Crypto Exchange";
+$pageTitle = "MBPAY - Crypto Exchange";
 require_once __DIR__ . '/User_dashboard/config/db.php';
-try {
-    $rateRow = $pdo->query("SELECT rate FROM crypto_rates WHERE pair='USDT/INR' LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-    $liveRate = $rateRow ? number_format(floatval($rateRow['rate']), 2) : '89.80';
-} catch (Exception $e) {
-    $liveRate = '89.80';
+
+function getAdminSetting($conn, $key, $default = '') {
+    $r = $conn->query("SELECT setting_value FROM settings WHERE setting_group='rates' AND setting_key='" . $conn->real_escape_string($key) . "'");
+    return ($r && $row = $r->fetch_assoc()) ? $row['setting_value'] : $default;
 }
+$sellRate1  = getAdminSetting($conn, 'usdt_sell_rate_1', '89.80');
+$sellRate2  = getAdminSetting($conn, 'usdt_sell_rate_2', '90.00');
+$sellLabel1 = getAdminSetting($conn, 'usdt_sell_label_1', 'Mixed Fund');
+$sellLabel2 = getAdminSetting($conn, 'usdt_sell_label_2', 'Premium Rate');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -979,12 +982,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </div>
             <div class="price-ticker">
-                
                 <div class="rupeee">
                     <img src="User_dashboard/image/golden-coin.png" alt="rupee-img">
                 </div>
-                <div class="price">₹<?php echo $liveRate; ?></div>
-                <p>Current USDT/INR Price</p>
+                <p style="font-size:13px; color:#D4AF37; margin-bottom:10px; font-weight:600; letter-spacing:0.5px;">USDT / INR LIVE RATES</p>
+                <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+                    <div style="background:rgba(0,0,0,0.7); border:1.5px solid #D4AF37; border-radius:10px; padding:14px 20px; min-width:130px; text-align:center;">
+                        <div style="font-size:11px; color:#D4AF37; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;"><?= htmlspecialchars($sellLabel1) ?></div>
+                        <div class="price">₹<?= number_format((float)$sellRate1, 2) ?></div>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.7); border:1.5px solid #D4AF37; border-radius:10px; padding:14px 20px; min-width:130px; text-align:center;">
+                        <div style="font-size:11px; color:#D4AF37; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;"><?= htmlspecialchars($sellLabel2) ?></div>
+                        <div class="price">₹<?= number_format((float)$sellRate2, 2) ?></div>
+                    </div>
+                </div>
+                <p style="margin-top:10px; font-size:12px; color:#94a3b8;">Current USDT/INR Price</p>
             </div>
         </div>
     </section>
