@@ -28,7 +28,7 @@ function countTransactions($pdo) {
     catch (Exception $e) { return 0; }
 }
 
-$totalUsers = $pdo->query("SELECT COUNT(*) FROM admin_users")->fetchColumn();
+$totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
 
 $currentPage       = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $transactions      = getTransactions($pdo, $currentPage);
@@ -365,7 +365,7 @@ catch (Exception $e) { $activeInvestmentCount = 0; }
         <tbody>
           <?php
           if (!$conn->connect_error) {
-            $result = $conn->query("SELECT * FROM admin_users ORDER BY created_at DESC LIMIT 5");
+            $result = $conn->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5");
             if ($result && $result->num_rows > 0) {
               while ($row = $result->fetch_assoc()) {
                 $uid   = "#USR" . str_pad($row['id'], 4, '0', STR_PAD_LEFT);
