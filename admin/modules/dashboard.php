@@ -35,8 +35,13 @@ $transactions      = getTransactions($pdo, $currentPage);
 $totalTransactions = countTransactions($pdo);
 $totalPages        = max(1, ceil($totalTransactions / 5));
 
-try { $pendingKycCount = $pdo->query("SELECT COUNT(*) FROM kyc_documents WHERE status='pending'")->fetchColumn(); }
-catch (Exception $e) { $pendingKycCount = 0; }
+try {
+    $totalKycCount    = $pdo->query("SELECT COUNT(*) FROM kyc_verifications")->fetchColumn();
+    $approvedKycCount = $pdo->query("SELECT COUNT(*) FROM kyc_verifications WHERE status='approved'")->fetchColumn();
+    $totalUsers2      = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+    $pendingKycCount  = $totalUsers2 - $approvedKycCount;
+    if ($pendingKycCount < 0) $pendingKycCount = 0;
+} catch (Exception $e) { $totalKycCount = $pendingKycCount = 0; }
 
 try { $activeInvestmentCount = $pdo->query("SELECT COUNT(*) FROM investments WHERE status='active'")->fetchColumn(); }
 catch (Exception $e) { $activeInvestmentCount = 0; }
@@ -330,9 +335,9 @@ catch (Exception $e) { $activeInvestmentCount = 0; }
     <div class="adm-stat">
       <div class="adm-stat-icon icon-orange"><i class="fas fa-id-card-alt"></i></div>
       <div class="adm-stat-info">
-        <div class="label">Pending KYC</div>
-        <div class="value"><?= $pendingKycCount ?></div>
-        <div class="trend">Live data</div>
+        <div class="label">KYC</div>
+        <div class="value"><?= $totalKycCount ?></div>
+        <div class="trend" style="color:#e37400;">⏳ Pending: <?= $pendingKycCount ?></div>
       </div>
     </div>
     <div class="adm-stat">

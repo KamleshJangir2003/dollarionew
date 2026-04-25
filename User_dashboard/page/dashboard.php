@@ -30,6 +30,15 @@ try {
     $transactions = $txnStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {}
 
+// KYC status check
+$kycDone = false;
+try {
+    $kycStmt = $pdo->prepare("SELECT status FROM kyc_verifications WHERE user_id = ? LIMIT 1");
+    $kycStmt->execute([$userId]);
+    $kycRow = $kycStmt->fetch(PDO::FETCH_ASSOC);
+    $kycDone = $kycRow && in_array($kycRow['status'], ['approved', 'pending']);
+} catch (PDOException $e) { $kycDone = false; }
+
 // Sell price options fetch
 function getDashSetting($pdo, $key, $default) {
     try {
@@ -499,6 +508,32 @@ function toggleHelpPanel() {
   panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
 }
 </script>
+
+<!-- KYC Popup -->
+<?php if (!$kycDone && empty($_COOKIE['kyc_popup_dismissed'])): ?>
+<div id="kycPopup" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:18px;padding:32px 28px;max-width:420px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.18);position:relative;">
+    <div style="width:64px;height:64px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <span class="material-icons-round" style="font-size:34px;color:#6366f1;">verified_user</span>
+    </div>
+    <h3 style="font-size:1.2rem;font-weight:700;color:#1e293b;margin-bottom:10px;">Complete Your KYC Verification</h3>
+    <p style="font-size:0.88rem;color:#64748b;margin-bottom:24px;line-height:1.6;">
+      Verify your identity to unlock all platform features.<br>
+      KYC is <strong>required</strong> for deposits, withdrawals and trading.
+    </p>
+    <a href="kyc.php" style="display:block;padding:13px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border-radius:10px;font-size:0.95rem;font-weight:700;text-decoration:none;margin-bottom:10px;">
+      ✅ Complete KYC Now
+    </a>
+    <button onclick="dismissKycPopup()" style="background:none;border:none;color:#94a3b8;font-size:0.82rem;cursor:pointer;padding:6px;">I'll do it later</button>
+  </div>
+</div>
+<script>
+function dismissKycPopup() {
+  document.getElementById('kycPopup').style.display = 'none';
+  document.cookie = 'kyc_popup_dismissed=1;path=/;max-age=86400';
+}
+</script>
+<?php endif; ?>
 
 </body>
 </html>
