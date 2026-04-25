@@ -52,8 +52,20 @@ include '../templates/header.php';
     .container { margin-left: 260px; max-width: calc(100vw - 260px); }
     @media (max-width: 767px) { .container { margin-left: 0; max-width: 100%; padding: 12px; } }
     .badge-pending   { background:#fef9c3; color:#92400e; }
-    .badge-confirmed { background:#dcfce7; color:#166534; }
+    .badge-confirmed { background:#dcfce7; color:#166634; }
     .badge-rejected  { background:#fee2e2; color:#991b1b; }
+
+    @media (max-width: 767px) {
+      table thead { display: none; }
+      table, table tbody, table tr, table td { display: block; width: 100%; }
+      table tr { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 14px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+      table td { border: none; padding: 5px 0; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+      table td::before { content: attr(data-label); font-weight: 600; color: #64748b; font-size: 12px; flex-shrink: 0; min-width: 80px; }
+      table td:first-child { font-weight: 700; color: #6366f1; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 6px; }
+      table td:first-child::before { display: none; }
+      .table-striped > tbody > tr:nth-of-type(odd) > * { background: transparent; }
+      .table-bordered { border: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -100,37 +112,39 @@ include '../templates/header.php';
       ?>
       <tr>
         <td><?= $count++ ?></td>
-        <td>
+        <td data-label="User">
           <strong><?= htmlspecialchars($row['username'] ?? 'N/A') ?></strong><br>
           <small class="text-muted"><?= htmlspecialchars($row['email'] ?? '') ?></small>
         </td>
-        <td><strong><?= number_format($row['amount'], 2) ?></strong></td>
-        <td><?= htmlspecialchars($row['chain'] ?? 'TRC20') ?></td>
-        <td>
-          <span title="<?= htmlspecialchars($row['tx_hash']) ?>">
+        <td data-label="Amount"><strong><?= number_format($row['amount'], 2) ?> USDT</strong></td>
+        <td data-label="Chain"><?= htmlspecialchars($row['chain'] ?? 'TRC20') ?></td>
+        <td data-label="Tx Hash">
+          <span title="<?= htmlspecialchars($row['tx_hash']) ?>" style="word-break:break-all;font-size:0.78rem;">
             <?= htmlspecialchars(substr($row['tx_hash'], 0, 16)) ?>...
           </span>
         </td>
-        <td>
+        <td data-label="Status">
           <span class="badge <?= $badgeClass ?> px-2 py-1 rounded">
             <?= ucfirst($row['status']) ?>
           </span>
         </td>
-        <td><?= date('d M Y, h:i A', strtotime($row['created_at'])) ?></td>
-        <td>
+        <td data-label="Date"><?= date('d M Y, h:i A', strtotime($row['created_at'])) ?></td>
+        <td data-label="Action">
           <?php if ($row['status'] === 'pending'): ?>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <form method="POST" style="display:inline" onsubmit="return confirm('Approve this deposit?')">
               <input type="hidden" name="deposit_id" value="<?= $row['id'] ?>">
               <input type="hidden" name="action" value="approve">
-              <button class="btn btn-success btn-sm">✔ Approve</button>
+              <button class="btn btn-success btn-sm">&#x2714; Approve</button>
             </form>
             <form method="POST" style="display:inline" onsubmit="return confirm('Reject this deposit?')">
               <input type="hidden" name="deposit_id" value="<?= $row['id'] ?>">
               <input type="hidden" name="action" value="reject">
-              <button class="btn btn-danger btn-sm">✘ Reject</button>
+              <button class="btn btn-danger btn-sm">&#x2718; Reject</button>
             </form>
+            </div>
           <?php else: ?>
-            <span class="text-muted">—</span>
+            <span class="text-muted">&mdash;</span>
           <?php endif; ?>
         </td>
       </tr>

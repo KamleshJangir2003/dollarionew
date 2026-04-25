@@ -45,10 +45,23 @@ include '../templates/header.php';
     .badge-approved { background:#dcfce7; color:#166534; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
     .badge-rejected { background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
     /* Modal */
-    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; padding:16px; }
     .modal-overlay.open { display:flex; }
-    .modal-box { background:#fff; border-radius:14px; padding:24px; max-width:500px; width:90%; }
+    .modal-box { background:#fff; border-radius:14px; padding:24px; max-width:500px; width:100%; }
     .modal-box img { width:100%; border-radius:8px; margin-bottom:10px; }
+
+    /* Mobile card view */
+    @media(max-width:767px) {
+      table thead { display:none; }
+      table, table tbody, table tr, table td { display:block; width:100%; }
+      table tr { background:#fff; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:14px; padding:14px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+      table td { border:none; padding:5px 0; font-size:13px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+      table td::before { content:attr(data-label); font-weight:600; color:#64748b; font-size:12px; flex-shrink:0; min-width:90px; }
+      table td:first-child { font-weight:700; color:#6366f1; border-bottom:1px solid #f1f5f9; padding-bottom:10px; margin-bottom:6px; }
+      table td:first-child::before { display:none; }
+      .doc-thumb { width:60px; height:45px; }
+      .table-hover > tbody > tr:hover > * { background:transparent; }
+    }
   </style>
 </head>
 <body>
@@ -87,53 +100,53 @@ include '../templates/header.php';
           ?>
           <tr>
             <td><?= $i++ ?></td>
-            <td>
+            <td data-label="User">
               <strong><?= htmlspecialchars($row['username'] ?? 'N/A') ?></strong><br>
               <small class="text-muted"><?= htmlspecialchars($row['email'] ?? '') ?></small>
             </td>
-            <td>
+            <td data-label="PAN Card">
               <?php if ($row['pan_card']): ?>
                 <?php $ext = strtolower(pathinfo($row['pan_card'], PATHINFO_EXTENSION)); ?>
                 <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
                   <img src="<?= $base . $row['pan_card'] ?>" class="doc-thumb" onclick="viewDoc('<?= $base . $row['pan_card'] ?>')">
                 <?php else: ?>
-                  <a href="<?= $base . $row['pan_card'] ?>" target="_blank" class="doc-link">📄 View PDF</a>
+                  <a href="<?= $base . $row['pan_card'] ?>" target="_blank" class="doc-link">&#x1F4C4; View PDF</a>
                 <?php endif; ?>
-              <?php else: echo '<span class="text-muted">—</span>'; endif; ?>
+              <?php else: echo '<span class="text-muted">&mdash;</span>'; endif; ?>
             </td>
-            <td>
+            <td data-label="Aadhaar">
               <?php if ($row['aadhaar_card']): ?>
                 <?php $ext = strtolower(pathinfo($row['aadhaar_card'], PATHINFO_EXTENSION)); ?>
                 <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
                   <img src="<?= $base . $row['aadhaar_card'] ?>" class="doc-thumb" onclick="viewDoc('<?= $base . $row['aadhaar_card'] ?>')">
                 <?php else: ?>
-                  <a href="<?= $base . $row['aadhaar_card'] ?>" target="_blank" class="doc-link">📄 View PDF</a>
+                  <a href="<?= $base . $row['aadhaar_card'] ?>" target="_blank" class="doc-link">&#x1F4C4; View PDF</a>
                 <?php endif; ?>
-              <?php else: echo '<span class="text-muted">—</span>'; endif; ?>
+              <?php else: echo '<span class="text-muted">&mdash;</span>'; endif; ?>
             </td>
-            <td>
+            <td data-label="Bank Statement">
               <?php if ($row['bank_statement']): ?>
                 <?php $ext = strtolower(pathinfo($row['bank_statement'], PATHINFO_EXTENSION)); ?>
                 <?php if (in_array($ext, ['jpg','jpeg','png'])): ?>
                   <img src="<?= $base . $row['bank_statement'] ?>" class="doc-thumb" onclick="viewDoc('<?= $base . $row['bank_statement'] ?>')">
                 <?php else: ?>
-                  <a href="<?= $base . $row['bank_statement'] ?>" target="_blank" class="doc-link">📄 View PDF</a>
+                  <a href="<?= $base . $row['bank_statement'] ?>" target="_blank" class="doc-link">&#x1F4C4; View PDF</a>
                 <?php endif; ?>
-              <?php else: echo '<span class="text-muted">—</span>'; endif; ?>
+              <?php else: echo '<span class="text-muted">&mdash;</span>'; endif; ?>
             </td>
-            <td><span class="badge-<?= $row['status'] ?>"><?= ucfirst($row['status']) ?></span></td>
-            <td><?= date('d M Y', strtotime($row['updated_at'])) ?></td>
-            <td>
+            <td data-label="Status"><span class="badge-<?= $row['status'] ?>"><?= ucfirst($row['status']) ?></span></td>
+            <td data-label="Submitted"><?= date('d M Y', strtotime($row['updated_at'])) ?></td>
+            <td data-label="Action">
               <?php if ($row['status'] === 'pending'): ?>
                 <form method="POST" style="display:inline" onsubmit="return confirm('Approve this KYC?')">
                   <input type="hidden" name="kyc_id" value="<?= $row['id'] ?>">
                   <input type="hidden" name="user_id" value="<?= $row['user_id'] ?>">
                   <input type="hidden" name="action" value="approve">
-                  <button class="btn btn-success btn-sm">✔ Approve</button>
+                  <button class="btn btn-success btn-sm">&#x2714; Approve</button>
                 </form>
-                <button class="btn btn-danger btn-sm ms-1" onclick="openReject(<?= $row['id'] ?>, <?= $row['user_id'] ?>)">✘ Reject</button>
+                <button class="btn btn-danger btn-sm ms-1" onclick="openReject(<?= $row['id'] ?>, <?= $row['user_id'] ?>)">&#x2718; Reject</button>
               <?php else: ?>
-                <span class="text-muted">—</span>
+                <span class="text-muted">&mdash;</span>
               <?php endif; ?>
             </td>
           </tr>

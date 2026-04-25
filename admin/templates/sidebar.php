@@ -118,13 +118,13 @@
 
     <li class="section">Marketing</li>
     <li><a href="/dollario-new/admin/modules/referral_system.php"><span class="material-icons">group_add</span> Referral System</a></li>
-    <li><a href="/dollario-new/admin/modules/campaigns.php"><span class="material-icons">campaign</span> Campaigns</a></li>
+    <!-- <li><a href="/dollario-new/admin/modules/campaigns.php"><span class="material-icons">campaign</span> Campaigns</a></li> -->
     <li><a href="/dollario-new/admin/modules/notifications.php"><span class="material-icons">notifications</span> Notifications</a></li>
 
     <li class="section">Administration</li>
-    <li><a href="/dollario-new/admin/modules/sub_admins.php"><span class="material-icons">admin_panel_settings</span> Sub-Admins</a></li>
+    <!-- <li><a href="/dollario-new/admin/modules/sub_admins.php"><span class="material-icons">admin_panel_settings</span> Sub-Admins</a></li> -->
     <li><a href="/dollario-new/admin/modules/security.php"><span class="material-icons">security</span> Security</a></li>
-    <li><a href="/dollario-new/admin/modules/audit_logs.php"><span class="material-icons">receipt</span> Audit Logs</a></li>
+    <!-- <li><a href="/dollario-new/admin/modules/audit_logs.php"><span class="material-icons">receipt</span> Audit Logs</a></li> -->
     <li><a href="/dollario-new/admin/modules/settings.php"><span class="material-icons">settings</span> Settings</a></li>
     <li><a href="/dollario-new/admin/modules/admin_help_requests.php"><span class="material-icons">help</span> Help</a></li>
     <li><a href="/dollario-new/admin/profile.php"><span class="material-icons">account_circle</span> My Profile</a></li>
