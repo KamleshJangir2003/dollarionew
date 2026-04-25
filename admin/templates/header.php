@@ -205,7 +205,7 @@ try {
     <!-- Notifications -->
     <div class="adm-notif" id="admNotifBtn">
       🔔
-      <span class="adm-notif-count" id="admNotifCount" style="<?= $_notifCount === 0 ? 'display:none' : '' ?>"><?= $_notifCount ?></span>
+      <span class="adm-notif-count" id="admNotifCount" data-count="<?= $_notifCount ?>" style="<?= $_notifCount === 0 ? 'display:none' : '' ?>"><?= $_notifCount ?></span>
       <div class="adm-notif-drop" id="admNotifDrop">
         <div id="admNotifList"><div style="padding:14px;text-align:center;color:#999;font-size:13px;">Loading…</div></div>
         <div style="padding:8px 16px;border-top:1px solid #f1f1f1;text-align:right;">
@@ -286,9 +286,39 @@ try {
         .then(function(r){ return r.json(); })
         .then(function(d){
           var badge = document.getElementById('admNotifCount');
+          var prevCount = parseInt(badge.getAttribute('data-count') || badge.textContent || '0');
           if (d.count > 0) { badge.textContent = d.count; badge.style.display = ''; }
           else { badge.style.display = 'none'; }
+          // Play sound only if count increased
+          if (d.count > prevCount) { playNotifSound(); }
+          badge.setAttribute('data-count', d.count);
         });
+    }
+
+    var audioCtx = null;
+    function unlockAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    document.addEventListener('click', unlockAudio, { once: false });
+
+    function playNotifSound() {
+      try {
+        unlockAudio();
+        if (!audioCtx) return;
+        var o = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(880, audioCtx.currentTime);
+        o.frequency.setValueAtTime(660, audioCtx.currentTime + 0.15);
+        g.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        o.start(audioCtx.currentTime);
+        o.stop(audioCtx.currentTime + 0.5);
+      } catch(e) {}
     }
 
     // Refresh count on page load + every 15s
