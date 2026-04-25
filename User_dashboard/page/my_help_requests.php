@@ -4,10 +4,26 @@ require '../config/db.php';
 if (!isset($_SESSION['user_id'])) { header("Location: ../auth/login.php"); exit; }
 $userId = $_SESSION['user_id'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message'])) {
-    $msg = trim($_POST['message']);
-    $pdo->prepare("INSERT INTO help_requests (user_id, subject, message, status, sender, created_at) VALUES (?, 'Chat Support', ?, 'Pending', 'user', NOW())")
-        ->execute([$userId, $msg]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!empty($_POST['message']) || !empty($_FILES['media']['name']))) {
+    $msg = trim($_POST['message'] ?? '');
+    $mediaFile = null;
+
+    if (!empty($_FILES['media']['name'])) {
+        $allowed = ['jpg','jpeg','png','gif','webp','mp4','mov','pdf'];
+        $ext = strtolower(pathinfo($_FILES['media']['name'], PATHINFO_EXTENSION));
+        if (in_array($ext, $allowed) && $_FILES['media']['size'] <= 10 * 1024 * 1024) {
+            $fname = time() . '_' . $userId . '.' . $ext;
+            $dest  = __DIR__ . '/../uploads/help_media/' . $fname;
+            if (move_uploaded_file($_FILES['media']['tmp_name'], $dest)) {
+                $mediaFile = $fname;
+            }
+        }
+    }
+
+    if ($msg !== '' || $mediaFile) {
+        $pdo->prepare("INSERT INTO help_requests (user_id, subject, message, media_file, status, sender, created_at) VALUES (?, 'Chat Support', ?, ?, 'Pending', 'user', NOW())")
+            ->execute([$userId, $msg ?: '', $mediaFile]);
+    }
     header("Location: my_help_requests.php"); exit;
 }
 
@@ -236,6 +252,23 @@ $uname = $uStmt->fetchColumn();
 
           <?= nl2br(htmlspecialchars($msgText)) ?>
 
+          <?php if (!empty($chat['media_file'])): ?>
+            <?php $mf = $chat['media_file']; $mext = strtolower(pathinfo($mf, PATHINFO_EXTENSION)); $murl = '../../User_dashboard/uploads/help_media/' . $mf; ?>
+            <?php if (in_array($mext, ['jpg','jpeg','png','gif','webp'])): ?>
+              <div style="margin-top:6px;">
+                <a href="<?= $murl ?>" target="_blank">
+                  <img src="<?= $murl ?>" style="max-width:220px;max-height:200px;border-radius:8px;display:block;">
+                </a>
+              </div>
+            <?php elseif (in_array($mext, ['mp4','mov'])): ?>
+              <video src="<?= $murl ?>" controls style="max-width:220px;border-radius:8px;margin-top:6px;display:block;"></video>
+            <?php elseif ($mext === 'pdf'): ?>
+              <a href="<?= $murl ?>" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;background:rgba(0,0,0,0.07);padding:6px 12px;border-radius:8px;font-size:0.78rem;color:#1e293b;text-decoration:none;">
+                <span class="material-icons-round" style="font-size:16px;">picture_as_pdf</span> View PDF
+              </a>
+            <?php endif; ?>
+          <?php endif; ?>
+
           <div class="bubble-foot">
             <span class="bubble-time"><?= $time ?></span>
             <span class="material-icons-round tick" style="font-size:13px">done_all</span>
@@ -263,10 +296,22 @@ $uname = $uStmt->fetchColumn();
       </div>
       <span class="material-icons-round rb-close" onclick="clearReply()">close</span>
     </div>
-    <form method="POST" id="chatForm">
+    <form method="POST" id="chatForm" enctype="multipart/form-data">
       <input type="hidden" name="reply_to_id" id="replyToId" value="">
+      <!-- Media preview -->
+      <div id="mediaPreview" style="display:none;padding:6px 0;">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:6px 12px;font-size:0.78rem;color:#374151;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <span class="material-icons-round" style="font-size:16px;color:#6366f1;">attach_file</span>
+          <span id="mediaFileName"></span>
+          <span onclick="clearMedia()" style="cursor:pointer;color:#94a3b8;font-size:16px;">&times;</span>
+        </div>
+      </div>
       <div class="input-row">
-        <textarea name="message" id="msgInput" placeholder="Type a message..." rows="1" required
+        <input type="file" name="media" id="mediaInput" accept="image/*,video/*,.pdf" style="display:none;" onchange="previewMedia(this)">
+        <button type="button" onclick="document.getElementById('mediaInput').click()" style="width:40px;height:40px;border-radius:50%;background:#e2e8f0;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span class="material-icons-round" style="font-size:20px;color:#64748b;">attach_file</span>
+        </button>
+        <textarea name="message" id="msgInput" placeholder="Type a message..." rows="1"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.getElementById('chatForm').submit();}"></textarea>
         <button type="submit" class="send-btn"><span class="material-icons-round">send</span></button>
       </div>
@@ -286,6 +331,18 @@ $uname = $uStmt->fetchColumn();
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 120) + 'px';
   });
+
+  function previewMedia(input) {
+    if (input.files && input.files[0]) {
+      document.getElementById('mediaFileName').textContent = input.files[0].name;
+      document.getElementById('mediaPreview').style.display = 'block';
+    }
+  }
+  function clearMedia() {
+    document.getElementById('mediaInput').value = '';
+    document.getElementById('mediaPreview').style.display = 'none';
+    document.getElementById('mediaFileName').textContent = '';
+  }
 
   // Long press / right click to reply on bubble
   document.querySelectorAll('.bubble').forEach(b => {

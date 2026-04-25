@@ -259,6 +259,23 @@ include '../templates/header.php';
 
             <?= nl2br(htmlspecialchars($msgText)) ?>
 
+            <?php if (!empty($chat['media_file'])): ?>
+              <?php $mf = $chat['media_file']; $mext = strtolower(pathinfo($mf, PATHINFO_EXTENSION)); $murl = '/dollario-new/User_dashboard/uploads/help_media/' . $mf; ?>
+              <?php if (in_array($mext, ['jpg','jpeg','png','gif','webp'])): ?>
+                <div style="margin-top:6px;">
+                  <a href="<?= $murl ?>" target="_blank">
+                    <img src="<?= $murl ?>" style="max-width:200px;max-height:180px;border-radius:8px;display:block;">
+                  </a>
+                </div>
+              <?php elseif (in_array($mext, ['mp4','mov'])): ?>
+                <video src="<?= $murl ?>" controls style="max-width:200px;border-radius:8px;margin-top:6px;display:block;"></video>
+              <?php elseif ($mext === 'pdf'): ?>
+                <a href="<?= $murl ?>" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;background:rgba(0,0,0,0.07);padding:6px 12px;border-radius:8px;font-size:0.78rem;color:#1e293b;text-decoration:none;">
+                  <span class="material-icons-round" style="font-size:16px;">picture_as_pdf</span> View PDF
+                </a>
+              <?php endif; ?>
+            <?php endif; ?>
+
             <div class="bfoot">
               <span class="btime"><?= $time ?></span>
             </div>
