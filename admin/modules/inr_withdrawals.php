@@ -61,14 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
     $action = $_POST['action'] === "approve" ? "Approved" : "Rejected";
 
     if ($action === "Approved") {
-        // Update status
         $conn->query("UPDATE inr_withdrawals SET status = 'Approved', approved_at = NOW() WHERE id = $id");
-        // Update user_transactions status
         $row = $conn->query("SELECT w.user_id, w.amount, w.method, w.account_details, u.email, u.username FROM inr_withdrawals w LEFT JOIN users u ON w.user_id = u.id WHERE w.id = $id")->fetch_assoc();
         if ($row) {
             $conn->query("UPDATE user_transactions SET status = 'completed' WHERE user_id = {$row['user_id']} AND type = 'withdraw_inr' AND amount = {$row['amount']} AND status = 'pending' LIMIT 1");
-            
-            // Send success email
             sendStatusEmail($row['email'], $row['username'] ?? 'User', '✅ INR Withdrawal Successful - MBPAY', [
                 'Transaction Type' => 'INR Withdrawal',
                 'Amount'           => '₹' . number_format($row['amount'], 2),
@@ -79,13 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
             ]);
         }
     } else {
-        // Rejected — refund INR back to wallet
         $row = $conn->query("SELECT w.user_id, w.amount, w.method, w.account_details, u.email, u.username FROM inr_withdrawals w LEFT JOIN users u ON w.user_id = u.id WHERE w.id = $id AND w.status = 'Pending'")->fetch_assoc();
         if ($row) {
             $conn->query("UPDATE wallets SET inr_balance = inr_balance + {$row['amount']} WHERE user_id = {$row['user_id']}");
             $conn->query("UPDATE user_transactions SET status = 'rejected' WHERE user_id = {$row['user_id']} AND type = 'withdraw_inr' AND amount = {$row['amount']} AND status = 'pending' LIMIT 1");
-            
-            // Send rejection email
             sendStatusEmail($row['email'], $row['username'] ?? 'User', '❌ INR Withdrawal Rejected - MBPAY', [
                 'Transaction Type' => 'INR Withdrawal',
                 'Amount'           => '₹' . number_format($row['amount'], 2),
@@ -97,6 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
         }
         $conn->query("UPDATE inr_withdrawals SET status = 'Rejected' WHERE id = $id");
     }
+    // Mark notification as read
+    $conn->query("UPDATE admin_notifications SET is_read = 1 WHERE type = 'inr_withdrawal' AND is_read = 0 AND (ref_id = $id OR ref_id IS NULL)");
     header("Location: inr_withdrawals.php");
     exit;
 }

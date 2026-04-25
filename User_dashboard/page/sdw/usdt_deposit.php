@@ -3,6 +3,7 @@ session_name('user_session');
 session_start();
 require '../../config/db.php';
 require '../../includes/transaction_mailer.php';
+require_once '../../config/notify_admin.php';
 
 $userId = $_SESSION['user_id'] ?? 0;
 if (!$userId) {
@@ -60,8 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "This transaction hash has already been submitted.";
             $msgType = "error";
         } else {
-            $pdo->prepare("INSERT INTO usdt_deposits (user_id, tx_hash, wallet_address, amount, chain, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())")
-                ->execute([$userId, $txHash, $wallets[$chain], $amount, $chain]);
+            $insertUsdt = $pdo->prepare("INSERT INTO usdt_deposits (user_id, tx_hash, wallet_address, amount, chain, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())");
+            $insertUsdt->execute([$userId, $txHash, $wallets[$chain], $amount, $chain]);
+            $usdtDepositId = $pdo->lastInsertId();
 
             $pdo->prepare("INSERT INTO user_transactions (user_id, type, amount, currency, description, created_at) VALUES (?, 'deposit', ?, 'USDT', ?, NOW())")
                 ->execute([$userId, $amount, "USDT Deposit via $chain — TxHash: $txHash"]);
@@ -80,6 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'Date & Time'      => date('d M Y, h:i A'),
                 ]);
             }
+
+            $uRow2 = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+            $uRow2->execute([$userId]);
+            $uName = ($uRow2->fetch(PDO::FETCH_ASSOC))['username'] ?? 'User';
+            addAdminNotif($pdo, 'USDT Deposit Request', "$uName ne $amount USDT deposit submit kiya (Chain: $chain, TxHash: " . substr($txHash,0,16) . "...)", 'usdt_deposit', $usdtDepositId);
 
             $message = "USDT deposit of $amount USDT submitted! Will be credited after confirmation.";
             $msgType = "success";

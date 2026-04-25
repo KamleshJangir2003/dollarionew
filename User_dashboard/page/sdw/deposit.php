@@ -3,6 +3,7 @@ session_name('user_session');
 session_start();
 require '../../config/db.php';
 require '../../includes/transaction_mailer.php';
+require_once '../../config/notify_admin.php';
 
 // Auto-create tables if missing
 try {
@@ -69,8 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = "Please enter UTR / Reference Number.";
         $msgType = "error";
     } else {
-        $pdo->prepare("INSERT INTO inr_deposits (user_id, amount, method, utr_number, bank_id, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())")
-            ->execute([$userId, $amount, $method, $utr, $bankId ?: null]);
+        $insertDeposit = $pdo->prepare("INSERT INTO inr_deposits (user_id, amount, method, utr_number, bank_id, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())");
+        $insertDeposit->execute([$userId, $amount, $method, $utr, $bankId ?: null]);
+        $depositId = $pdo->lastInsertId();
 
         $pdo->prepare("INSERT INTO user_transactions (user_id, type, amount, currency, description, created_at) VALUES (?, 'deposit', ?, 'INR', ?, NOW())")
             ->execute([$userId, $amount, "INR Deposit via $method — UTR: $utr"]);
@@ -89,6 +91,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'Date & Time'      => date('d M Y, h:i A'),
             ]);
         }
+
+        $uRow2 = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+        $uRow2->execute([$userId]);
+        $uName = ($uRow2->fetch(PDO::FETCH_ASSOC))['username'] ?? 'User';
+        addAdminNotif($pdo, 'INR Deposit Request', "$uName ne Rs." . number_format($amount, 2) . " deposit request submit ki (UTR: $utr)", 'inr_deposit', $depositId);
 
         $message = "Deposit request of ₹" . number_format($amount, 2) . " submitted! Will be credited after admin approval (within 24 hours).";
         $msgType = "success";

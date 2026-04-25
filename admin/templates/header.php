@@ -1,7 +1,22 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_name('admin_session'); session_start(); }
-$_SESSION['user_name']      = $_SESSION['user_name'] ?? $_SESSION['username'] ?? 'Admin';
-$_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
+$_SESSION['user_name'] = $_SESSION['user_name'] ?? $_SESSION['username'] ?? 'Admin';
+
+// Load real unread count from DB
+$_notifCount = 0;
+try {
+    if (!isset($pdo)) require_once __DIR__ . '/../includes/config.php';
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `admin_notifications` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `title` varchar(255) NOT NULL,
+        `message` text NOT NULL,
+        `type` varchar(50) NOT NULL DEFAULT 'general',
+        `is_read` tinyint(1) NOT NULL DEFAULT 0,
+        `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $_notifCount = (int)$pdo->query("SELECT COUNT(*) FROM admin_notifications WHERE is_read = 0")->fetchColumn();
+} catch (Exception $e) { $_notifCount = 0; }
 ?>
 <script>
   (function(){
@@ -190,13 +205,14 @@ $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
     <!-- Notifications -->
     <div class="adm-notif" id="admNotifBtn">
       🔔
-      <span class="adm-notif-count"><?= $_SESSION['notifications'] ?></span>
+      <span class="adm-notif-count" id="admNotifCount" style="<?= $_notifCount === 0 ? 'display:none' : '' ?>"><?= $_notifCount ?></span>
       <div class="adm-notif-drop" id="admNotifDrop">
-        <p>New user registered</p>
-        <p>Deposit request received</p>
-        <p>Password changed successfully</p>
-        <p>Admin logged in</p>
-        <p>New support ticket</p>
+        <div id="admNotifList"><div style="padding:14px;text-align:center;color:#999;font-size:13px;">Loading…</div></div>
+        <div style="padding:8px 16px;border-top:1px solid #f1f1f1;text-align:right;">
+          <a href="/dollario-new/admin/modules/notifications.php" style="font-size:12px;color:#6366f1;text-decoration:none;">View All</a>
+          &nbsp;·&nbsp;
+          <a href="#" id="admMarkRead" style="font-size:12px;color:#888;text-decoration:none;">Mark all read</a>
+        </div>
       </div>
     </div>
 
@@ -230,12 +246,71 @@ $_SESSION['notifications']  = $_SESSION['notifications'] ?? 5;
       });
     }
 
+    var notifPageUrls = {
+      inr_deposit:    '/dollario-new/admin/modules/inr_deposits_admin.php',
+      usdt_deposit:   '/dollario-new/admin/modules/usdt_deposits.php',
+      inr_withdrawal: '/dollario-new/admin/modules/inr_withdrawals.php',
+      buy_usdt:       '/dollario-new/admin/modules/buy_usdt_admin.php',
+      sell_usdt:      '/dollario-new/admin/modules/sell_usdt_admin.php',
+      general:        '/dollario-new/admin/modules/notifications.php'
+    };
+
+    function loadNotifications() {
+      fetch('/dollario-new/admin/api/notifications.php')
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          var list = document.getElementById('admNotifList');
+          if (!data.length) {
+            list.innerHTML = '<div style="padding:14px;text-align:center;color:#999;font-size:13px;">Koi notification nahi</div>';
+            return;
+          }
+          var icons = { inr_deposit: '💰', usdt_deposit: '🪙', inr_withdrawal: '💸', buy_usdt: '🛒', sell_usdt: '📄', general: '🔔' };
+          list.innerHTML = data.map(function(n){
+            var ic = icons[n.type] || '🔔';
+            var unread = n.is_read == 0 ? 'background:#fffbeb;' : '';
+            var time = n.created_at.substring(0,16).replace('T',' ');
+            var url = notifPageUrls[n.type] || notifPageUrls.general;
+            return '<a href="'+url+'" style="display:block;padding:10px 16px;border-bottom:1px solid #f1f1f1;'+unread+'text-decoration:none;color:inherit;cursor:pointer;" '
+              + 'onmouseover="this.style.background=\'#f5f7fa\'" onmouseout="this.style.background=\''+( n.is_read==0 ? '#fffbeb' : '#fff' )+'\'" >'
+              + '<div style="font-size:13px;font-weight:600;color:#1a2332;">'+ic+' '+n.title+'</div>'
+              + '<div style="font-size:12px;color:#555;margin-top:2px;">'+n.message+'</div>'
+              + '<div style="font-size:11px;color:#aaa;margin-top:3px;">'+time+'</div>'
+              + '</a>';
+          }).join('');
+        })
+        .catch(function(){ document.getElementById('admNotifList').innerHTML = '<div style="padding:14px;text-align:center;color:#c00;font-size:13px;">Load error</div>'; });
+    }
+
+    function refreshCount() {
+      fetch('/dollario-new/admin/api/notifications.php?action=count')
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          var badge = document.getElementById('admNotifCount');
+          if (d.count > 0) { badge.textContent = d.count; badge.style.display = ''; }
+          else { badge.style.display = 'none'; }
+        });
+    }
+
+    // Refresh count on page load + every 15s
+    refreshCount();
+    setInterval(refreshCount, 15000);
+
     notifBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       var open = notifDrop.style.display === 'block';
       notifDrop.style.display = open ? 'none' : 'block';
       dropMenu.classList.remove('show');
+      if (!open) loadNotifications();
     });
+
+    var markRead = document.getElementById('admMarkRead');
+    if (markRead) {
+      markRead.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        fetch('/dollario-new/admin/api/notifications.php?action=mark_read')
+          .then(function(){ refreshCount(); loadNotifications(); });
+      });
+    }
 
     userBtn.addEventListener('click', function (e) {
       e.stopPropagation();

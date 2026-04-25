@@ -3,6 +3,7 @@ session_name('user_session');
 session_start();
 require '../../config/db.php';
 require '../../includes/transaction_mailer.php';
+require_once '../../config/notify_admin.php';
 
 // Auto-create tables if missing
 try {
@@ -110,6 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msgType = "success";
         $usdtBalance = $newUsdt;
         $wallet['inr_balance'] = $newInr;
+        $uName2 = $uData['username'] ?? 'User#'.$userId;
+        addAdminNotif($pdo, 'Sell USDT', "$uName2 ne ".number_format($amount,4)." USDT becha Rs.".number_format($inrCredit,2)." me ($selectedLabel)", 'sell_usdt');
     }
 }
 ?>

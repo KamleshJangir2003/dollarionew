@@ -13,21 +13,21 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['action'], $_POST['id']
     $row = $conn->query("SELECT * FROM inr_deposits WHERE id = $id")->fetch_assoc();
 
     if ($row && $row['status'] === 'pending') {
+        $utr = $conn->real_escape_string($row['utr_number'] ?? '');
         if ($action === 'approve') {
             // Credit INR to wallet
             $conn->query("UPDATE wallets SET inr_balance = inr_balance + {$row['amount']} WHERE user_id = {$row['user_id']}");
-            // If wallet doesn't exist, create it
             if ($conn->affected_rows === 0) {
                 $conn->query("INSERT INTO wallets (user_id, inr_balance, usdt_balance) VALUES ({$row['user_id']}, {$row['amount']}, 0)");
             }
-            // Update deposit status
             $conn->query("UPDATE inr_deposits SET status = 'approved', approved_at = NOW() WHERE id = $id");
-            // Update user_transactions
             $conn->query("UPDATE user_transactions SET status = 'completed' WHERE user_id = {$row['user_id']} AND type = 'deposit' AND amount = {$row['amount']} AND status = 'pending' LIMIT 1");
         } else {
             $conn->query("UPDATE inr_deposits SET status = 'rejected' WHERE id = $id");
             $conn->query("UPDATE user_transactions SET status = 'rejected' WHERE user_id = {$row['user_id']} AND type = 'deposit' AND amount = {$row['amount']} AND status = 'pending' LIMIT 1");
         }
+        // Mark notification as read — match by ref_id OR utr (handles old + new notifications)
+        $conn->query("UPDATE admin_notifications SET is_read = 1 WHERE type = 'inr_deposit' AND is_read = 0 AND (ref_id = $id OR message LIKE '%UTR: $utr%')");
     }
     header("Location: inr_deposits_admin.php");
     exit;

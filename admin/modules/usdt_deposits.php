@@ -9,35 +9,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['dep
     // Fetch deposit
     $dep = $conn->query("SELECT * FROM usdt_deposits WHERE id = $depId")->fetch_assoc();
 
-    if ($dep && $dep['status'] === 'pending') {
-        if ($action === 'approve') {
+    if ($dep) {
+        $txHash = $conn->real_escape_string($dep['tx_hash']);
+        if ($action === 'approve' && $dep['status'] === 'pending') {
             $conn->begin_transaction();
             try {
-                // Update deposit status
                 $conn->query("UPDATE usdt_deposits SET status='confirmed' WHERE id=$depId");
-
-                // Credit USDT to user wallet
                 $userId = intval($dep['user_id']);
                 $amount = floatval($dep['amount']);
-
-                // Ensure wallet exists
                 $conn->query("INSERT IGNORE INTO wallets (user_id, inr_balance, usdt_balance) VALUES ($userId, 0, 0)");
                 $conn->query("UPDATE wallets SET usdt_balance = usdt_balance + $amount WHERE user_id = $userId");
-
-                // Update transaction status
-                $txHash = $conn->real_escape_string($dep['tx_hash']);
                 $conn->query("UPDATE user_transactions SET status='completed' WHERE user_id=$userId AND type='deposit' AND currency='USDT' AND description LIKE '%$txHash%'");
-
                 $conn->commit();
                 $success = "Deposit approved and $amount USDT credited to user wallet.";
             } catch (Exception $e) {
                 $conn->rollback();
                 $error = "Error: " . $e->getMessage();
             }
-        } elseif ($action === 'reject') {
+        } elseif ($action === 'reject' && $dep['status'] === 'pending') {
             $conn->query("UPDATE usdt_deposits SET status='rejected' WHERE id=$depId");
             $success = "Deposit rejected.";
         }
+        // Mark notification as read — match by ref_id OR tx_hash (handles old + new notifications)
+        $conn->query("UPDATE admin_notifications SET is_read = 1 WHERE type = 'usdt_deposit' AND is_read = 0 AND (ref_id = $depId OR message LIKE '%$txHash%')");
     }
 }
 

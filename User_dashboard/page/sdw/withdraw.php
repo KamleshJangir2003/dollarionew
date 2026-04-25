@@ -3,6 +3,7 @@ session_name('user_session');
 session_start();
 require '../../config/db.php';
 require '../../includes/transaction_mailer.php';
+require_once '../../config/notify_admin.php';
 
 // Auto-create tables if missing
 try {
@@ -70,9 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE wallets SET inr_balance = ? WHERE user_id = ?")
             ->execute([$newBalance, $userId]);
 
-        // Insert into inr_withdrawals
-        $pdo->prepare("INSERT INTO inr_withdrawals (user_id, amount, method, account_details, status, requested_at) VALUES (?, ?, ?, ?, 'Pending', NOW())")
-            ->execute([$userId, $amount, $method, $details]);
+        // Insert into inr_withdrawals — capture ID immediately
+        $wStmt = $pdo->prepare("INSERT INTO inr_withdrawals (user_id, amount, method, account_details, status, requested_at) VALUES (?, ?, ?, ?, 'Pending', NOW())");
+        $wStmt->execute([$userId, $amount, $method, $details]);
+        $withdrawId = (int)$pdo->lastInsertId();
 
         // Record in user_transactions
         $pdo->prepare("INSERT INTO user_transactions (user_id, type, amount, currency, description, status, created_at) VALUES (?, 'withdraw_inr', ?, 'INR', ?, 'pending', NOW())")
@@ -92,6 +94,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'Date & Time'      => date('d M Y, h:i A'),
             ]);
         }
+
+        // Admin notification with correct ref_id
+        $uName = $uData['username'] ?? 'User';
+        addAdminNotif($pdo, 'INR Withdrawal Request', "$uName ne Rs." . number_format($amount, 2) . " withdrawal request ki via $method", 'inr_withdrawal', $withdrawId);
 
         $message = "Withdrawal request of ₹" . number_format($amount, 2) . " submitted! Will be processed within 24 hours.";
         $msgType = "success";

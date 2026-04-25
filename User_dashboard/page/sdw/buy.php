@@ -3,6 +3,7 @@ session_name('user_session');
 session_start();
 require '../../config/db.php';
 require '../../includes/transaction_mailer.php';
+require_once '../../config/notify_admin.php';
 
 $userId = $_SESSION['user_id'] ?? 0;
 if (!$userId) { header('Location: ../../auth/login.php'); exit; }
@@ -72,6 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msgType = "success";
         $inrBalance  = $newInr;
         $usdtBalance = $newUsdt;
+        $uName2 = $uData['username'] ?? 'User#'.$userId;
+        addAdminNotif($pdo, 'Buy USDT', "$uName2 ne Rs.".number_format($inrAmount,2)." me ".number_format($usdtGet,4)." USDT kharida ($rateLabel)", 'buy_usdt');
     }
 }
 ?>
