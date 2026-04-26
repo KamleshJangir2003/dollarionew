@@ -1168,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="social-links">
                     <a href="#"><i class="fab fa-twitter"></i></a>
                     <a href="#"><i class="fab fa-linkedin"></i></a>
-                    <a href="#"><i class="fab fa-telegram"></i></a>
+                    <a href="https://t.me/+ZSDxZHM19EBkOTg1"><i class="fab fa-telegram"></i></a>
                 </div>
             </div>
 
