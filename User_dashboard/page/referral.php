@@ -47,7 +47,11 @@ foreach ($level1 as $l1) {
 // Bonus history
 $bonus_query = $conn->query("SELECT * FROM referral_bonus WHERE referred_by = $user_id ORDER BY created_at DESC LIMIT 20");
 
-$referral_link = "http://" . $_SERVER['HTTP_HOST'] . "/dollario-new/User_dashboard/auth/signup.php?ref=" . urlencode($referral_code ?? '');
+$base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+// Get path dynamically — works on both localhost and live server regardless of folder case
+$script_path = $_SERVER['SCRIPT_NAME']; // e.g. /dollario-new/User_dashboard/page/referral.php
+$auth_dir = substr($script_path, 0, strrpos($script_path, '/page/')) . '/auth';
+$referral_link = $base_url . $auth_dir . '/signup.php?ref=' . urlencode($referral_code ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
