@@ -49,11 +49,9 @@ $bonus_query = $conn->query("SELECT * FROM referral_bonus WHERE referred_by = $u
 
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $base_url  = $protocol . '://' . $_SERVER['HTTP_HOST'];
-$script_path = $_SERVER['SCRIPT_NAME']; // exact path on this server
+$script_path = $_SERVER['SCRIPT_NAME']; // e.g. /User_dashboard/page/referral.php
 $auth_dir    = substr($script_path, 0, strrpos($script_path, '/page/')) . '/auth';
 $referral_link = $base_url . $auth_dir . '/signup.php?ref=' . urlencode($referral_code ?? '');
-// This auto-detects: localhost = /dollario-new/User_dashboard/auth/signup.php
-//                   live      = /User_dashboard/auth/signup.php  (if domain root = dollario-new)
 ?>
 <!DOCTYPE html>
 <html lang="en">
