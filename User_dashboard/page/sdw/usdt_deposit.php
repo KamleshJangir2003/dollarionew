@@ -117,7 +117,7 @@ $deposits = $history->fetchAll(PDO::FETCH_ASSOC);
     .network-tabs { display:flex; gap:8px; margin-bottom:20px; }
     .net-tab { flex:1; padding:10px; border:2px solid #e2e8f0; border-radius:10px; text-align:center; cursor:pointer; font-size:0.82rem; font-weight:600; color:#64748b; transition:all 0.2s; }
     .net-tab.active { border-color:#6366f1; color:#6366f1; background:#eef2ff; }
-    .wallet-box { background:#f0fdf4; border:1.5px dashed #86efac; border-radius:12px; padding:16px; margin-bottom:20px; text-align:center; }
+    .wallet-box { background:#f0fdf4; border:1.5px dashed #86efac; border-radius:12px; padding:16px; margin-bottom:20px; text-align:center; display:flex; flex-direction:column; align-items:center; }
     .wallet-box .addr { font-size:0.85rem; font-weight:700; color:#166534; word-break:break-all; margin:8px 0; }
     .copy-btn { background:#22c55e; color:#fff; border:none; border-radius:8px; padding:6px 16px; font-size:0.8rem; cursor:pointer; font-weight:600; }
     .copy-btn:hover { background:#16a34a; }
@@ -177,7 +177,7 @@ $deposits = $history->fetchAll(PDO::FETCH_ASSOC);
   <div class="wallet-box">
     <div style="font-size:0.78rem;color:#64748b;margin-bottom:10px;">Send USDT to this address</div>
     <img id="qrImg" src="<?= $qrImages['TRC20'] ? '../../../admin/uploads/' . htmlspecialchars($qrImages['TRC20']) : '' ?>" alt="QR Code"
-      style="width:160px;height:160px;object-fit:contain;border:1px solid #86efac;border-radius:10px;margin-bottom:10px;<?= $qrImages['TRC20'] ? '' : 'display:none;' ?>">
+      style="width:160px;height:160px;object-fit:contain;border:1px solid #86efac;border-radius:10px;margin:0 auto 10px auto;display:<?= $qrImages['TRC20'] ? 'block' : 'none' ?>;">
     <div class="addr" id="walletAddr"><?= $wallets['TRC20'] ?></div>
     <button class="copy-btn" onclick="copyAddr()">📋 Copy Address</button>
     <div style="font-size:0.75rem;color:#64748b;margin-top:8px;">⚠️ Only send USDT on selected network. Wrong network = lost funds.</div>
@@ -249,6 +249,7 @@ function switchNet(net, el) {
   if (qrImages[net]) {
     qrImg.src = qrImages[net];
     qrImg.style.display = 'block';
+    qrImg.style.margin = '0 auto 10px auto';
   } else {
     qrImg.style.display = 'none';
   }
