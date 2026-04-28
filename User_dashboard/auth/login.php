@@ -4,6 +4,19 @@ session_start();
 
 require_once __DIR__ . '/../config/db.php';
 
+// APK download tracking
+if (isset($_GET['apk_downloaded'])) {
+    setcookie('apk_downloaded', '1', time() + (86400 * 365), '/');
+    header("Location: login.php");
+    exit;
+}
+
+$apk_downloaded = isset($_COOKIE['apk_downloaded']) && $_COOKIE['apk_downloaded'] === '1';
+
+// Detect mobile device
+$ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+$is_mobile = preg_match('/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua);
+
 $error = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -28,8 +41,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['role'] = 'user';
 
             $ip = $_SERVER['REMOTE_ADDR'];
-            $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
-            $pdo->prepare("INSERT INTO login_history (user_id, ip_address, user_agent) VALUES (?, ?, ?)")->execute([$id, $ip, $ua]);
+            $login_ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $pdo->prepare("INSERT INTO login_history (user_id, ip_address, user_agent) VALUES (?, ?, ?)")->execute([$id, $ip, $login_ua]);
             $pdo->prepare("UPDATE users SET ip_address = ? WHERE id = ?")->execute([$ip, $id]);
 
             header("Location: ../page/dashboard.php");
@@ -320,6 +333,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <h2 class="form-title">User Login</h2>
         <p class="form-subtitle">Access your account securely</p>
 
+        <?php if ($is_mobile && !$apk_downloaded): ?>
+            <!-- APK Download Screen -->
+            <div style="text-align:center;padding:20px 0;">
+                <div style="font-size:64px;margin-bottom:16px;">📱</div>
+                <h3 style="color:#36465D;font-size:20px;margin-bottom:10px;">Download Our App First</h3>
+                <p style="color:#6c757d;font-size:14px;margin-bottom:30px;">Please download and install the MBPAY app to continue. Login is only available through the app.</p>
+                <a href="../../69ef223461fc91c6d606f34e.apk" download onclick="setTimeout(function(){ window.location='login.php?apk_downloaded=1'; }, 2000);" class="btn btn-primary" style="display:inline-block;text-decoration:none;padding:16px 32px;width:auto;">
+                    ⬇️ Download MBPAY App
+                </a>
+                <p style="color:#6c757d;font-size:12px;margin-top:20px;">Already downloaded? <a href="login.php?apk_downloaded=1" style="color:#D4AF37;font-weight:600;">Click here to login</a></p>
+            </div>
+        <?php else: ?>
+
         <?php if ($error): ?>
             <div style="color:#dc3545;background:#fff0f0;border:1px solid #f5c6cb;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:14px;">
                 <?= htmlspecialchars($error) ?>
@@ -348,6 +374,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <form method="POST" action="guest_login.php">
     <!-- <button type="submit" class="btn btn-secondary">Continue as Guest</button> -->
 </form>
+        <?php endif; ?>
 
         <p class="terms">By signing in, you agree to our <a href="..\terms-condistion.php">Terms and Conditions</a> &amp; <a href="..\privacy-policy.php">Privacy Policy</a>.</p>
     </div>
